@@ -24,11 +24,12 @@ bool get_state_closed(int, int);
 bool (*get_state)(int, int) = get_state_wrapped;
 
 const unsigned int ROWS = 32;
-const unsigned int COLS = 32; // bits in type used for state array unsigned long
+unsigned long state[2][ROWS];
+const unsigned int COLS = 8*sizeof(state[0][0]); // bits in type used for state array unsigned long
 const unsigned int DELAY = 25;
 unsigned int generation;
 bool active = false;
-unsigned long state[2][ROWS];
+
 
 void initialize() {
   generation = 0;
