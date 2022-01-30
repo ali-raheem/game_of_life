@@ -1,26 +1,46 @@
 // Copyright 2022 Ali Raheem <github@shoryuken.me>
 
-#define LIVE " + "
+#define LIVE " # "
 #define DEAD " - "
+
+// Comment this out to not monitor for static population numbers
+#define USE_STALE
+
+// Comment this out to not limit numebr of generations
+#define USE_GENERATION_LIMIT
+
+#ifdef USE_GENERATION_LIMIT
+const unsigned int GENERATION_LIMIT = 1000; // Reset after this many generations
+#endif
+
+#ifdef USE_STALE
+const unsigned int STALE_LIMIT = 5; // Reset if population not changed in STALE_LIMIT generations
+unsigned int last_pop;
+unsigned int stale;
+#endif
+
+bool get_state_wrapped(int, int);
+bool get_state_closed(int, int);
+bool (*get_state)(int, int) = get_state_wrapped;
 
 const unsigned int ROWS = 32;
 const unsigned int COLS = 32; // bits in type used for state array unsigned long
 const unsigned int DELAY = 25;
+unsigned int generation;
 bool active = false;
 unsigned long state[2][ROWS];
 
-bool get_state_wrapped(int, int);
-bool get_state_closed(int, int);
-
-bool (*get_state)(int, int) = get_state_wrapped;
-unsigned int generation;
-
 void initialize() {
   generation = 0;
+  
+#ifdef USE_STALE
+  last_pop = stale = 0;
+#endif
+
   // flip will initialise the frame buffers to 0
   // randomize will intialise them... randomly.
   flip();
-  // flip();
+  flip();
   randomize();
   // Setting a glider to start with.
   state[active][15] = 0x00020000; // Glider
@@ -37,7 +57,7 @@ void setup() {
 // Closed topology
 bool get_state_closed (int i, int j) {
   if (i < 0 || i > (ROWS-1) || j < 0 || j > (COLS-1))
-    return false;
+    return false; // Out of bounds cells count as dead.
   return ((state[active][i]) >> j) & 1;
 }
 
@@ -108,14 +128,35 @@ void loop() {
     }
     Serial.println("");
   }
-  flip();
-  timer = millis() - timer;
-  Serial.print("Generation: ");
-  Serial.print(generation++, DEC);
-  Serial.print(" Population: ");
-  Serial.print(pop, DEC);
-  Serial.print(" Render time: ");
-  Serial.print(timer, DEC);
-  Serial.println("ms");
-  delay(DELAY);
+  #ifdef USE_STALE
+  if (++stale > STALE_LIMIT) {
+    initialize();
+  } else {
+    if (last_pop != pop) {
+      stale = 0;
+      last_pop = pop;
+    }
+  #endif
+  #ifdef USE_GENERATION_LIMIT
+  if (generation > GENERATION_LIMIT) {
+    initialize();
+  } else {
+  #endif
+    generation++;
+    flip();
+    timer = millis() - timer;
+    Serial.print("Generation: ");
+    Serial.print(generation, DEC);
+    Serial.print(" Population: ");
+    Serial.print(pop, DEC);
+    Serial.print(" Render time: ");
+    Serial.print(timer, DEC);
+    Serial.println("ms");
+    delay(DELAY);
+  #ifdef USE_GENERATION_LIMIT
+  }
+  #endif
+  #ifdef USE_STALE
+  }
+  #endif
 }
