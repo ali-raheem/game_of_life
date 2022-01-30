@@ -10,6 +10,9 @@
 // Comment this out to not limit numebr of generations
 #define USE_GENERATION_LIMIT
 
+// Comment this out to stop statistics bring printed
+#define USE_STATS
+
 #ifdef USE_GENERATION_LIMIT
 const unsigned int GENERATION_LIMIT = 1000; // Reset after this many generations
 #endif
@@ -27,7 +30,7 @@ bool (*get_state)(int, int) = get_state_wrapped;
 const unsigned int ROWS = 32;
 unsigned long state[2][ROWS];
 const unsigned int COLS = 8*sizeof(state[0][0]); // bits in type used for state array unsigned long
-const unsigned int DELAY = 25;
+const unsigned int DELAY = 250;
 unsigned int generation;
 bool active = false;
 
@@ -132,6 +135,9 @@ void loop() {
     }
     Serial.println("");
   }
+  if (pop < 3) {
+    initialize();
+  } else {
   #ifdef USE_STALE
   if (++stale > STALE_LIMIT) {
     initialize();
@@ -148,6 +154,7 @@ void loop() {
   #endif
     generation++;
     flip();
+    #ifdef USE_STATS
     timer = millis() - timer;
     Serial.print("Generation: ");
     Serial.print(generation, DEC);
@@ -156,11 +163,13 @@ void loop() {
     Serial.print(" Render time: ");
     Serial.print(timer, DEC);
     Serial.println("ms");
+    #endif
     delay(DELAY);
-  #ifdef USE_GENERATION_LIMIT
+      #ifdef USE_GENERATION_LIMIT
+      }
+      #endif
+    #ifdef USE_STALE
+    }
+    #endif
   }
-  #endif
-  #ifdef USE_STALE
-  }
-  #endif
 }
