@@ -5,19 +5,19 @@
 #define DEAD " - "
 
 // Comment this out to not monitor for static population numbers
-#define USE_STALE
+#define USE_STALE_LIMIT
 
 // Comment this out to not limit numebr of generations
 #define USE_GENERATION_LIMIT
 
 // Comment this out to stop statistics bring printed
-#define USE_STATS
+#define PRINT_STATS
 
 #ifdef USE_GENERATION_LIMIT
 const unsigned int GENERATION_LIMIT = 1000; // Reset after this many generations
 #endif
 
-#ifdef USE_STALE
+#ifdef USE_STALE_LIMIT
 const unsigned int STALE_LIMIT = 5; // Reset if population not changed in STALE_LIMIT generations
 unsigned int last_pop;
 unsigned int stale;
@@ -38,7 +38,7 @@ bool active = false;
 void initialize() {
   generation = 0;
   
-#ifdef USE_STALE
+#ifdef USE_STALE_LIMIT
   last_pop = stale = 0;
 #endif
 
@@ -138,7 +138,7 @@ void loop() {
   if (pop < 3) {
     initialize();
   } else {
-  #ifdef USE_STALE
+  #ifdef USE_STALE_LIMIT
   if (++stale > STALE_LIMIT) {
     initialize();
   } else {
@@ -154,7 +154,7 @@ void loop() {
   #endif
     generation++;
     flip();
-    #ifdef USE_STATS
+    #ifdef PRINT_STATS
     timer = millis() - timer;
     Serial.print("Generation: ");
     Serial.print(generation, DEC);
@@ -168,7 +168,7 @@ void loop() {
       #ifdef USE_GENERATION_LIMIT
       }
       #endif
-    #ifdef USE_STALE
+    #ifdef USE_STALE_LIMIT
     }
     #endif
   }
