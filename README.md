@@ -7,6 +7,7 @@ The goal was to be somewhat light on memory - each cell state is held by a singl
 Uses 2 frame buffers which could be simplified and the algorithim could do with some optimizing.
 
 ![Screenshot of the sketch running with serial output](screenshot.png).
+![A Gosper gun](screenshot_gosper.png).
 
 ## Settings
 
