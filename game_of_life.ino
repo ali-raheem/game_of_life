@@ -1,5 +1,8 @@
 // Copyright 2022 Ali Raheem <github@shoryuken.me>
 
+#define LIVE " + "
+#define DEAD " - "
+
 const int ROWS = 32;
 const int COLS = 32; // bits in type used for state array unsigned long
 bool active = false;
@@ -89,9 +92,9 @@ void loop() {
     for (j = 0; j < COLS; j++) {
       bool s = get_state(i, j);
       if (s) {
-        Serial.print(" + ");
+        Serial.print(LIVE);
       } else {
-        Serial.print(" - ");
+        Serial.print(DEAD);
       }
       update_state(i, j);
     }
