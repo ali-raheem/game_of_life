@@ -3,8 +3,9 @@
 #define LIVE " + "
 #define DEAD " - "
 
-const int ROWS = 32;
-const int COLS = 32; // bits in type used for state array unsigned long
+const unsigned int ROWS = 32;
+const unsigned int COLS = 32; // bits in type used for state array unsigned long
+const unsigned int DELAY = 25;
 bool active = false;
 unsigned long state[2][ROWS];
 
@@ -12,6 +13,26 @@ bool get_state_wrapped(int, int);
 bool get_state_closed(int, int);
 
 bool (*get_state)(int, int) = get_state_wrapped;
+unsigned int generation;
+
+void initialize() {
+  generation = 0;
+  // flip will initialise the frame buffers to 0
+  // randomize will intialise them... randomly.
+  flip();
+  // flip();
+  randomize();
+  // Setting a glider to start with.
+  state[active][15] = 0x00020000; // Glider
+  state[active][16] = 0x00010000; //
+  state[active][17] = 0x00070000; //
+}
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("Game of Life - Arduino 32x32");
+  initialize();
+}
 
 // Closed topology
 bool get_state_closed (int i, int j) {
@@ -32,21 +53,6 @@ bool get_state_wrapped (int i, int j) {
     j = 0;
   return (state[active][i] >> j) & 1;
 }
-
-void setup() {
-  Serial.begin(115200);
-  Serial.println("Game of Life - Arduino 32x32");
-  // flip will initialise the frame buffers to 0
-  // randomize will intialise them... randomly.
-  flip();
-  // flip();
-  randomize();
-  // Setting a glider to start with.
-  state[active][15] = 0x00020000; // Glider
-  state[active][16] = 0x00010000; //
-  state[active][17] = 0x00070000; //
-}
-
 
 int sum (int i, int j) {
   int s = get_state(i - 1, j - 1) + get_state(i - 1, j) + get_state(i - 1, j + 1) +
@@ -87,10 +93,12 @@ void randomize() {
 }
 
 void loop() {
-  int i, j;
+  unsigned long timer = millis();
+  int i, j, pop = 0;
   for (i = 0; i < ROWS; i++) {
     for (j = 0; j < COLS; j++) {
       bool s = get_state(i, j);
+      pop += s;
       if (s) {
         Serial.print(LIVE);
       } else {
@@ -100,8 +108,14 @@ void loop() {
     }
     Serial.println("");
   }
-  Serial.println("");
-
   flip();
- delay(50);
+  timer = millis() - timer;
+  Serial.print("Generation: ");
+  Serial.print(generation++, DEC);
+  Serial.print(" Population: ");
+  Serial.print(pop, DEC);
+  Serial.print(" Render time: ");
+  Serial.print(timer, DEC);
+  Serial.println("ms");
+  delay(DELAY);
 }
