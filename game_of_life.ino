@@ -1,4 +1,5 @@
 // Copyright 2022 Ali Raheem <github@shoryuken.me>
+// https://github.com/ali-raheem/game_of_life
 
 #define LIVE " # "
 #define DEAD " - "
@@ -44,14 +45,16 @@ void initialize() {
   flip();
   randomize();
   // Setting a glider to start with.
-  state[active][15] = 0x00020000; // Glider
-  state[active][16] = 0x00010000; //
-  state[active][17] = 0x00070000; //
+  //state[active][15] = 0x00020000; // Glider
+  //state[active][16] = 0x00010000; //
+  //state[active][17] = 0x00070000; //
 }
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Game of Life - Arduino 32x32");
+  Serial.println("Game of Life - Arduino");
+  Serial.println("Copyright 2022 Ali Raheem <github@shoryuken.me>");
+  Serial.println("https://github.com/ali-raheem/game_of_life");
   initialize();
 }
 
