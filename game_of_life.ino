@@ -1,14 +1,14 @@
 // Copyright 2022 Ali Raheem <github@shoryuken.me>
 // https://github.com/ali-raheem/game_of_life
 
-#define LIVE " # "
+#define LIVE " @ "
 #define DEAD " - "
 
 // Comment this out to not monitor for static population numbers
-#define USE_STALE_LIMIT
+//#define USE_STALE_LIMIT
 
 // Comment this out to not limit numebr of generations
-#define USE_GENERATION_LIMIT
+//#define USE_GENERATION_LIMIT
 
 // Comment this out to stop statistics bring printed
 #define PRINT_STATS
@@ -27,10 +27,10 @@ bool get_state_wrapped(int, int);
 bool get_state_closed(int, int);
 bool (*get_state)(int, int) = get_state_wrapped;
 
-const unsigned int ROWS = 32;
+const unsigned int ROWS = 40;
 unsigned long state[2][ROWS];
 const unsigned int COLS = 8*sizeof(state[0][0]); // bits in type used for state array unsigned long
-const unsigned int DELAY = 250;
+const unsigned int DELAY = 25;
 unsigned int generation;
 bool active = false;
 
@@ -46,11 +46,35 @@ void initialize() {
   // randomize will intialise them... randomly.
   flip();
   flip();
-  randomize();
-  // Setting a glider to start with.
-  //state[active][15] = 0x00020000; // Glider
-  //state[active][16] = 0x00010000; //
-  //state[active][17] = 0x00070000; //
+  // randomize();
+  
+  // Note when setting these the field it is mirrored
+  // Gosper Gun
+  state[active][2] =  0x00003000;
+  state[active][3] =  0x00003000;
+  state[active][12] = 0x00007000;
+  state[active][13] = 0x00008800;
+  state[active][14] = 0x00010400;
+  state[active][15] = 0x00010400;
+  state[active][16] = 0x00002000;
+  state[active][17] = 0x00008800;
+  state[active][18] = 0x00007000;
+  state[active][19] = 0x00002000;
+  state[active][22] = 0x00001c00;
+  state[active][23] = 0x00001c00;
+  state[active][24] = 0x00002200;
+  state[active][25] = 0x000c0000;
+  state[active][26] = 0x00146300;
+  state[active][27] = 0x00100000;
+  state[active][28] = 0x00300000;
+  state[active][36] = 0x00000c00;
+  state[active][37] = 0x00000c00;
+  // A loan Glider
+  /*
+  state[active][0] = 0x00020000;
+  state[active][1] = 0x00010000;
+  state[active][2] = 0x00070000;
+  */
 }
 
 void setup() {
