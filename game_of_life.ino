@@ -1,8 +1,8 @@
 // Copyright 2022 Ali Raheem <github@shoryuken.me>
 // https://github.com/ali-raheem/game_of_life
 
-#define LIVE " @ "
-#define DEAD " - "
+const char LIVE = '#';
+const char DEAD = '-';
 
 // Comment this out to not monitor for static population numbers
 //#define USE_STALE_LIMIT
@@ -34,6 +34,7 @@ const unsigned int DELAY = 25;
 unsigned int generation;
 bool active = false;
 
+char print_buffer[COLS + 1]; // COLS * sizeof(unsigned long);
 
 void initialize() {
   generation = 0;
@@ -82,6 +83,7 @@ void setup() {
   Serial.println("Game of Life - Arduino");
   Serial.println("Copyright 2022 Ali Raheem <github@shoryuken.me>");
   Serial.println("https://github.com/ali-raheem/game_of_life");
+  print_buffer[COLS] = 0;
   initialize();
 }
 
@@ -143,6 +145,16 @@ void randomize() {
                         (unsigned long) analogRead(0);
 }
 
+void render_state(bool s, int j) {
+  char state;
+    if (s) {
+      state = LIVE;
+    } else {
+      state = DEAD;
+    }
+    print_buffer[j] = state;
+}
+
 void loop() {
   unsigned long timer = millis();
   int i, j, pop = 0;
@@ -150,14 +162,10 @@ void loop() {
     for (j = 0; j < COLS; j++) {
       bool s = get_state(i, j);
       pop += s;
-      if (s) {
-        Serial.print(LIVE);
-      } else {
-        Serial.print(DEAD);
-      }
+      render_state(s, j);
       update_state(i, j);
     }
-    Serial.println("");
+    Serial.println(print_buffer);
   }
   if (pop < 3) {
     initialize();
