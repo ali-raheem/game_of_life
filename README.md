@@ -68,3 +68,6 @@ A 64x64 version looks good but there is a bug as I can't see how avr-gcc bodges 
 
 ![32x64 Gosper gun](screenshot-32x64.png)
 You can see that wrapping topology means this Gosper gun gets about 8 gliders out before it hits itself.
+
+![Simple border](screenshot-border.png)
+L33t h4x0r border.
