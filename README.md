@@ -10,6 +10,7 @@ Uses 2 frame buffers which could be simplified and the algorithim could do with 
 ![A Gosper gun](screenshot_gosper.png).
 ![Performance improves with printing less](screenshot-print-buffer.png).
 ![64x64 version perfoamce is also acceptable](screenshot-64x64.png)
+![32x64 Gosper gun](screenshot-64x64.png)
 
 ## Settings
 
@@ -21,7 +22,7 @@ Code is hopefully self explanatory but:
 4. `USE_GENERATION_LIMIT` and `GENERATION_LIMIT` resets after a set number of generations
 5. `USE_STALE_LIMT` and `STALE_LIMIT` resets if population hasn't changes for a number of generations
 6. `ROWS` can be changed.
-7. `COLS` **shouldn't** be changed, instead you could change the type of state to be an array of unsigned int or unsigned char. Default is `unsigned long` (32), but you could pick `unsigned long long` (64), `unsigned int` (16), `unsigned char` (8)... whatever you like!
+7. `COLS` **shouldn't** be changed, instead you could change the type of state to be an array of unsigned int or unsigned char. Default is `unsigned long` (32), but you could pick `unsigned long long` (64) (see note below), `unsigned int` (16), `unsigned char` (8)... whatever you like!
 8. `USE_STATS` controls if stats are printed.
 
 ## Performance
@@ -30,13 +31,16 @@ Slowest part of the code is (of course) printing to the Serial output. Using a s
 
 Other speed ups like unrolling the inner loop, amortizing the sum into coloums, using the buffer as an `unsigned long[]` to copy up to 4bytes a time don't seem particularly useful. Probably because `avr-gcc` is smarter than me.
 
-Even 64x64 runs okay.
+Even 64x64 runs okay with serial printing seeming to be the biggest bottle neck. Also this is provided by `avr-gcc` and I can't get it to work reliably...
 
 ## Memory usage
 
 On the cheapest arduino clone board I can find labelled only "nano" here is the Arduino IDE output for the Gosper Gun demo on a 32x40 board with wrapping topology, as seen above.
 
 ### 32x40
+
+Big enough for a Gosper Gun.
+
 ```
 Sketch uses 3198 bytes (10%) of program storage space. Maximum is 30720 bytes.
 Global variables use 673 bytes (32%) of dynamic memory, leaving 1375 bytes for local variables. Maximum is 2048 bytes.
@@ -52,6 +56,6 @@ Global variables use 1381 bytes (67%) of dynamic memory, leaving 667 bytes for l
 
 ## Branches
 
-* master - the one you want for up to date code
-* print_buffer - using buffered print - no benefit.
-* unroll - Unrolling the inner loop and manually reducing some calculations - no benefit
+* `master` - the one you want for up to date code
+* `print_buffer` - using buffered print - no benefit.
+* `unroll` - Unrolling the inner loop and manually reducing some calculations - no benefit

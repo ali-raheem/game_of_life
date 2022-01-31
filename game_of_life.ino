@@ -1,7 +1,7 @@
 // Copyright 2022 Ali Raheem <github@shoryuken.me>
 // https://github.com/ali-raheem/game_of_life
 
-const char *LIVE = " @";
+const char *LIVE = " #";
 const char *DEAD = " -";
 
 // Comment this out to not monitor for static population numbers
@@ -14,11 +14,11 @@ const char *DEAD = " -";
 #define PRINT_STATS
 
 #ifdef USE_GENERATION_LIMIT
-const unsigned int GENERATION_LIMIT = 1000; // Reset after this many generations
+const unsigned int GENERATION_LIMIT = 2000; // Reset after this many generations
 #endif
 
 #ifdef USE_STALE_LIMIT
-const unsigned int STALE_LIMIT = 5; // Reset if population not changed in STALE_LIMIT generations
+const unsigned int STALE_LIMIT = 10; // Reset if population not changed in STALE_LIMIT generations
 unsigned int last_pop;
 unsigned int stale;
 #endif
@@ -33,7 +33,6 @@ const unsigned int COLS = 8 * sizeof(state[0][0]); // bits in type used for stat
 const unsigned int DELAY = 25;
 unsigned int generation;
 bool active = false;
-
 
 void initialize() {
   generation = 0;
@@ -50,6 +49,7 @@ void initialize() {
   
   // Note when setting these the field it is mirrored
   // Gosper Gun Use at least 40 ROWS!
+  // With eater
 //  state[active][2] =  0x00003000;
 //  state[active][3] =  0x00003000;
 //  state[active][12] = 0x00007000;
@@ -69,6 +69,24 @@ void initialize() {
 //  state[active][28] = 0x00300000;
 //  state[active][36] = 0x00000c00;
 //  state[active][37] = 0x00000c00;
+  // Gosper Gun Use at least 40 ROWS!
+  //
+//  state[active][2] =  0x00003000;
+//  state[active][3] =  0x00003000;
+//  state[active][12] = 0x00007000;
+//  state[active][13] = 0x00008800;
+//  state[active][14] = 0x00010400;
+//  state[active][15] = 0x00010400;
+//  state[active][16] = 0x00002000;
+//  state[active][17] = 0x00008800;
+//  state[active][18] = 0x00007000;
+//  state[active][19] = 0x00002000;
+//  state[active][22] = 0x00001c00;
+//  state[active][23] = 0x00001c00;
+//  state[active][24] = 0x00002200;
+//  state[active][26] = 0x00006300;
+//  state[active][36] = 0x00000c00;
+//  state[active][37] = 0x00000c00;
   // A loan Glider
 //  state[active][0] = 0x00020000;
 //  state[active][1] = 0x00010000;
@@ -81,6 +99,11 @@ void setup() {
   Serial.println("Game of Life - Arduino");
   Serial.println("Copyright 2022 Ali Raheem <github@shoryuken.me>");
   Serial.println("https://github.com/ali-raheem/game_of_life");
+  int seed = analogRead(0) ^ analogRead(1);
+  randomSeed(seed);
+  Serial.print("Seed: ");
+  Serial.print(seed, DEC);
+  Serial.println();
   initialize();
 }
 
@@ -117,9 +140,11 @@ void update_state (int i, int j) {
       state[!active][i] |= (1ULL << j); // type
       break;
     case 4:
-      unsigned long s = get_state(i, j);
+      {
+        unsigned long s = get_state(i, j);
       state[!active][i] |= (s << j);
       break;
+      }
     default:
       state[!active][i] &= ~(1ULL << j); // type
   }
@@ -135,14 +160,13 @@ void flip() {
 void randomize() {
    int i;
    active = !active;
-   for(i = 0; i < ROWS; i++)
-    state[active][i] =  (unsigned long) analogRead(0) << 24 |
-                        (unsigned long) analogRead(1) << 16 |
-                        (unsigned long) analogRead(2) << 8  | 
-                        (unsigned long) analogRead(3);
+   for(i = 0; i < ROWS; i++) {
+    state[active][i] = ((unsigned long long) random() << 32) + (unsigned long long) random();
+   }  
 }
 
 void loop() {
+  Serial.println("");
   unsigned long timer = millis();
   int i, j, pop = 0;
   for (i = 0; i < ROWS; i++) {
@@ -156,7 +180,7 @@ void loop() {
       }
       update_state(i, j);
     }
-    Serial.println("");
+    Serial.println();
   }
   if (pop < 3) {
     initialize();
@@ -185,7 +209,7 @@ void loop() {
     Serial.print(pop, DEC);
     Serial.print(" Render time: ");
     Serial.print(timer, DEC);
-    Serial.println("ms");
+    Serial.print("ms");
     #endif
     delay(DELAY);
       #ifdef USE_GENERATION_LIMIT
