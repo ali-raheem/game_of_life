@@ -31,3 +31,11 @@ Other speed ups like unrolling the inner loop, amortizing the sum into coloums, 
 
 ## Memory usage
 
+On the cheapest arduino clone board I can find labelled only "nano" here is the Arduino IDE output for the Gosper Gun demo on a 32x40 board with wrapping topology, as seen above.
+
+```
+Sketch uses 3198 bytes (10%) of program storage space. Maximum is 30720 bytes.
+Global variables use 673 bytes (32%) of dynamic memory, leaving 1375 bytes for local variables. Maximum is 2048 bytes.
+```
+
+Every other implementation I've seen would use 32*40 bytes for a single frame buffer. A stonking 1280 bytes alone. Of the ones I tested (stripping away printing) all had circa 4KB globals.
