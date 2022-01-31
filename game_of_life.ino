@@ -165,6 +165,7 @@ void randomize() {
 }
 
 void loop() {
+  Serial.println();
   unsigned long timer = millis();
   int i, j, pop = 0;
   for (i = 0; i < ROWS; i++) {
