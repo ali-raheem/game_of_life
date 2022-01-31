@@ -9,6 +9,7 @@ Uses 2 frame buffers which could be simplified and the algorithim could do with 
 ![Screenshot of the sketch running with serial output](screenshot.png).
 ![A Gosper gun](screenshot_gosper.png).
 ![Performance improves with printing less](screenshot-print-buffer.png).
+![64x64 version perfoamce is also acceptable](screenshot-64x64.png)
 
 ## Settings
 
@@ -20,7 +21,7 @@ Code is hopefully self explanatory but:
 4. `USE_GENERATION_LIMIT` and `GENERATION_LIMIT` resets after a set number of generations
 5. `USE_STALE_LIMT` and `STALE_LIMIT` resets if population hasn't changes for a number of generations
 6. `ROWS` can be changed.
-7. `COLS` **shouldn't** be changed, instead you could change the type of state to be an array of unsigned int or unsigned char. But you probably don't want this cause you could only make it smaller!
+7. `COLS` **shouldn't** be changed, instead you could change the type of state to be an array of unsigned int or unsigned char. Default is `unsigned long` (32), but you could pick `unsigned long long` (64), `unsigned int` (16), `unsigned char` (8)... whatever you like!
 8. `USE_STATS` controls if stats are printed.
 
 ## Performance
@@ -29,13 +30,22 @@ Slowest part of the code is (of course) printing to the Serial output. Using a s
 
 Other speed ups like unrolling the inner loop, amortizing the sum into coloums, using the buffer as an `unsigned long[]` to copy up to 4bytes a time don't seem particularly useful. Probably because `avr-gcc` is smarter than me.
 
+Even 64x64 runs okay.
+
 ## Memory usage
 
 On the cheapest arduino clone board I can find labelled only "nano" here is the Arduino IDE output for the Gosper Gun demo on a 32x40 board with wrapping topology, as seen above.
 
+### 32x40
 ```
 Sketch uses 3198 bytes (10%) of program storage space. Maximum is 30720 bytes.
 Global variables use 673 bytes (32%) of dynamic memory, leaving 1375 bytes for local variables. Maximum is 2048 bytes.
 ```
 
 Every other implementation I've seen would use 32*40 bytes for a single frame buffer. A stonking 1280 bytes alone. Of the ones I tested (stripping away printing) all had circa 4KB globals.
+
+### 64x64
+```
+Sketch uses 4004 bytes (13%) of program storage space. Maximum is 30720 bytes.
+Global variables use 1381 bytes (67%) of dynamic memory, leaving 667 bytes for local variables. Maximum is 2048 bytes.
+```
