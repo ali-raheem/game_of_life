@@ -8,7 +8,7 @@ Uses 2 frame buffers which could be simplified and the algorithim could do with 
 
 ![Screenshot of the sketch running with serial output](screenshot.png).
 ![A Gosper gun](screenshot_gosper.png).
-![Performance improves with buffered printing](screenshot-print-buffer.png).
+![Performance improves with printing less](screenshot-print-buffer.png).
 
 ## Settings
 
@@ -25,6 +25,9 @@ Code is hopefully self explanatory but:
 
 ## Performance
 
-Slowest part of the code is (of course) printing to the Serial output. Using buffered print and printing shorter strings halves render time. Check out the `print_buffer` branch to see this.
+Slowest part of the code is (of course) printing to the Serial output. Using a short string for living and dead states is the biggest perforamnce improvement I've seen so far. Even better than buffering the print (which probably happens anyways).
 
 Other speed ups like unrolling the inner loop, amortizing the sum into coloums, using the buffer as an `unsigned long[]` to copy up to 4bytes a time don't seem particularly useful. Probably because `avr-gcc` is smarter than me.
+
+## Memory usage
+
