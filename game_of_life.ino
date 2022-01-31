@@ -1,8 +1,8 @@
 // Copyright 2022 Ali Raheem <github@shoryuken.me>
 // https://github.com/ali-raheem/game_of_life
 
-const char *LIVE = " @";
-const char *DEAD = " -";
+const char *LIVE = " # ";
+const char *DEAD = " - ";
 
 // Comment this out to not monitor for static population numbers
 #define USE_STALE_LIMIT
@@ -125,6 +125,19 @@ void update_state (int i, int j) {
   }
 }
 
+void update_state_optim (int sum, int i, int j, unsigned long s) {
+  switch (sum) {
+    case 3:
+      state[!active][i] |= (1ULL << j); // type
+      break;
+    case 4:
+      state[!active][i] |= (s << j);
+      break;
+    default:
+      state[!active][i] &= ~(1ULL << j); // type
+  }
+}
+
 void flip() {
   int i;
   for(i = 0; i < ROWS; i++)
@@ -142,20 +155,34 @@ void randomize() {
                         (unsigned long) analogRead(3);
 }
 
-void loop() {
-  unsigned long timer = millis();
-  int i, j, pop = 0;
-  for (i = 0; i < ROWS; i++) {
-    for (j = 0; j < COLS; j++) {
-      bool s = get_state(i, j);
-      pop += s;
+void render_state(bool s) {
       if (s) {
-        Serial.print(LIVE);
-      } else {
-        Serial.print(DEAD);
-      }
-      update_state(i, j);
+      Serial.print(LIVE);
+    } else {
+      Serial.print(DEAD);
     }
+}
+void loop() {
+  Serial.println("");
+  unsigned long timer = millis();
+  unsigned int i, j, pop = 0;
+  for (i = 0; i < ROWS; i++) {
+    j = 0;
+    bool s = get_state(i, j);
+    int sum_l = get_state(i - 1, j - 1) + get_state(i, j - 1) + get_state(i + 1, j - 1);
+    int sum_m = get_state(i - 1, j)     +        s            + get_state(i + 1, j);
+    int sum_r = get_state(i - 1, j + 1) + get_state(i, j + 1) + get_state(i + 1, j + 1);
+    do {
+      int sum = sum_l + sum_m + sum_r;
+      pop += s;
+      update_state_optim(sum, i, j, s);
+      render_state(s);
+      j++;
+      s = get_state(i, j);
+      sum_l = sum_m;
+      sum_m = sum_r;
+      sum_r = get_state(i - 1, j + 1) + get_state(i, j + 1) + get_state(i + 1, j + 1);
+    } while(j < COLS);
     Serial.println("");
   }
   if (pop < 3) {
@@ -185,7 +212,7 @@ void loop() {
     Serial.print(pop, DEC);
     Serial.print(" Render time: ");
     Serial.print(timer, DEC);
-    Serial.println("ms");
+    Serial.print("ms");
     #endif
     delay(DELAY);
       #ifdef USE_GENERATION_LIMIT
