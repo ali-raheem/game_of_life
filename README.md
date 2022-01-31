@@ -8,6 +8,7 @@ Uses 2 frame buffers which could be simplified and the algorithim could do with 
 
 ![Screenshot of the sketch running with serial output](screenshot.png).
 ![A Gosper gun](screenshot_gosper.png).
+![Performance improves with buffered printing](screenshot-print-buffer.png).
 
 ## Settings
 
@@ -21,3 +22,9 @@ Code is hopefully self explanatory but:
 6. `ROWS` can be changed.
 7. `COLS` **shouldn't** be changed, instead you could change the type of state to be an array of unsigned int or unsigned char. But you probably don't want this cause you could only make it smaller!
 8. `USE_STATS` controls if stats are printed.
+
+## Performance
+
+Slowest part of the code is (of course) printing to the Serial output. Using buffered print and printing shorter strings halves render time. Check out the `print_buffer` branch to see this.
+
+Other speed ups like unrolling the inner loop, amortizing the sum into coloums, using the buffer as an `unsigned long[]` to copy up to 4bytes a time don't seem particularly useful. Probably because `avr-gcc` is smarter than me.
