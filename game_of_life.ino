@@ -2,7 +2,7 @@
 // https://github.com/ali-raheem/game_of_life
 
 const char *LIVE = " #";
-const char *DEAD = " -";
+const char *DEAD = "  ";
 
 // Comment this out to not monitor for static population numbers
 #define USE_STALE_LIMIT
@@ -160,13 +160,11 @@ void flip() {
 void randomize() {
    int i;
    active = !active;
-   for(i = 0; i < ROWS; i++) {
-    state[active][i] = ((unsigned long long) random() << 32) + (unsigned long long) random();
-   }  
+   for(i = 0; i < ROWS; i++)
+    state[active][i] = random();
 }
 
 void loop() {
-  Serial.println("");
   unsigned long timer = millis();
   int i, j, pop = 0;
   for (i = 0; i < ROWS; i++) {
