@@ -6,13 +6,6 @@ The goal was to be somewhat light on memory - each cell state is held by a singl
 
 Uses 2 frame buffers which could be simplified and the algorithim could do with some optimizing.
 
-## Screenshots
-![Screenshot of the sketch running with serial output](screenshot.png).
-![A Gosper gun](screenshot_gosper.png).
-![Performance improves with printing less](screenshot-print-buffer.png).
-![64x64 version perfoamce is also acceptable](screenshot-64x64.png)
-![32x64 Gosper gun](screenshot-32x64.png)
-
 ## Settings
 
 Code is hopefully self explanatory but:
@@ -60,3 +53,18 @@ Global variables use 1381 bytes (67%) of dynamic memory, leaving 667 bytes for l
 * `master` - the one you want for up to date code
 * `print_buffer` - using buffered print - no benefit.
 * `unroll` - Unrolling the inner loop and manually reducing some calculations - no benefit
+* `border` - Print a silly border around it.
+
+## Screenshots
+![Screenshot of the sketch running with serial output](screenshot.png).
+
+![A Gosper gun](screenshot_gosper.png).
+
+![Performance improves with printing less](screenshot-print-buffer.png).
+Printing less bytes improves render time (as it's spending less waiting on the serial port).
+
+![64x64 version perfoamce is also acceptable](screenshot-64x64.png)
+A 64x64 version looks good but there is a bug as I can't see how avr-gcc bodges long long to manage movement.
+
+![32x64 Gosper gun](screenshot-32x64.png)
+You can see that wrapping topology means this Gosper gun gets about 8 gliders out before it hits itself.
