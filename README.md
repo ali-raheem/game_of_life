@@ -6,11 +6,12 @@ The goal was to be somewhat light on memory - each cell state is held by a singl
 
 Uses 2 frame buffers which could be simplified and the algorithim could do with some optimizing.
 
+## Screenshots
 ![Screenshot of the sketch running with serial output](screenshot.png).
 ![A Gosper gun](screenshot_gosper.png).
 ![Performance improves with printing less](screenshot-print-buffer.png).
 ![64x64 version perfoamce is also acceptable](screenshot-64x64.png)
-![32x64 Gosper gun](screenshot-64x64.png)
+![32x64 Gosper gun](screenshot-32x64.png)
 
 ## Settings
 
