@@ -49,3 +49,9 @@ Every other implementation I've seen would use 32*40 bytes for a single frame bu
 Sketch uses 4004 bytes (13%) of program storage space. Maximum is 30720 bytes.
 Global variables use 1381 bytes (67%) of dynamic memory, leaving 667 bytes for local variables. Maximum is 2048 bytes.
 ```
+
+## Branches
+
+* master - the one you want for up to date code
+* print_buffer - using buffered print - no benefit.
+* unroll - Unrolling the inner loop and manually reducing some calculations - no benefit
