@@ -42,10 +42,10 @@ Global variables use 673 bytes (32%) of dynamic memory, leaving 1375 bytes for l
 
 Every other implementation I've seen would use 32*40 bytes for a single frame buffer. A stonking 1280 bytes alone. Of the ones I tested (stripping away printing) all had circa 4KB globals.
 
-### 64x64
+### 64x64 (uses avr-gxx unsigned long long)
 ```
-Sketch uses 4004 bytes (13%) of program storage space. Maximum is 30720 bytes.
-Global variables use 1381 bytes (67%) of dynamic memory, leaving 667 bytes for local variables. Maximum is 2048 bytes.
+Sketch uses 3652 bytes (11%) of program storage space. Maximum is 30720 bytes.
+Global variables use 629 bytes (30%) of dynamic memory, leaving 1419 bytes for local variables. Maximum is 2048 bytes.
 ```
 
 ## Branches
@@ -54,6 +54,7 @@ Global variables use 1381 bytes (67%) of dynamic memory, leaving 667 bytes for l
 * `print_buffer` - using buffered print - no benefit.
 * `unroll` - Unrolling the inner loop and manually reducing some calculations - no benefit
 * `border` - Print a silly border around it.
+* `64bit` - The 64x64 version using avr-gcc extension
 
 ## Screenshots
 ![Screenshot of the sketch running with serial output](screenshot.png).
@@ -61,13 +62,17 @@ Global variables use 1381 bytes (67%) of dynamic memory, leaving 667 bytes for l
 ![A Gosper gun](screenshot_gosper.png).
 
 ![Performance improves with printing less](screenshot-print-buffer.png).
+
 Printing less bytes improves render time (as it's spending less waiting on the serial port).
 
 ![64x64 version perfoamce is also acceptable](screenshot-64x64.png)
+
 A 64x64 version looks good but there is a bug as I can't see how avr-gcc bodges long long to manage movement.
 
 ![32x64 Gosper gun](screenshot-32x64.png)
+
 You can see that wrapping topology means this Gosper gun gets about 8 gliders out before it hits itself.
 
 ![Simple border](screenshot-border.png)
+
 L33t h4x0r border.
