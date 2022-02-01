@@ -31,6 +31,8 @@ Even 64x64 runs okay with serial printing seeming to be the biggest bottle neck.
 
 On the cheapest arduino clone board I can find labelled only "nano" here is the Arduino IDE output for the Gosper Gun demo on a 32x40 board with wrapping topology, as seen above.
 
+An easy optimization is to shorten/remove some of the casts for shifting. 
+
 ### 32x40
 
 Big enough for a Gosper Gun.
@@ -44,8 +46,8 @@ Every other implementation I've seen would use 32*40 bytes for a single frame bu
 
 ### 64x64
 ```
-Sketch uses 4004 bytes (13%) of program storage space. Maximum is 30720 bytes.
-Global variables use 1381 bytes (67%) of dynamic memory, leaving 667 bytes for local variables. Maximum is 2048 bytes.
+Sketch uses 4526 bytes (14%) of program storage space. Maximum is 30720 bytes.
+Global variables use 1393 bytes (68%) of dynamic memory, leaving 655 bytes for local variables. Maximum is 2048 bytes.
 ```
 
 ## Branches
