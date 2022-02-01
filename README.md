@@ -56,6 +56,7 @@ Global variables use 1393 bytes (68%) of dynamic memory, leaving 655 bytes for l
 * `print_buffer` - using buffered print - no benefit.
 * `unroll` - Unrolling the inner loop and manually reducing some calculations - no benefit
 * `border` - Print a silly border around it.
+* `64bit` - Just loads of unsigned long long which is an avr-gcc extension
 
 ## Screenshots
 ![Screenshot of the sketch running with serial output](screenshot.png).
