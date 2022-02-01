@@ -16,7 +16,7 @@ Code is hopefully self explanatory but:
 4. `USE_GENERATION_LIMIT` and `GENERATION_LIMIT` resets after a set number of generations
 5. `USE_STALE_LIMT` and `STALE_LIMIT` resets if population hasn't changes for a number of generations
 6. `ROWS` can be changed.
-7. `COLS` **shouldn't** be changed, instead you could change the type of state to be an array of unsigned int or unsigned char. Default is `unsigned long` (32), but you could pick `unsigned long long` (64) (see note below), `unsigned int` (16), `unsigned char` (8)... whatever you like!
+7. `COLS` **shouldn't** be changed, instead you could change the type of state to be an array of unsigned int or unsigned char. Default is `unsigned long` (32), but you could pick `unsigned long long` (64), `unsigned int` (16), `unsigned char` (8)... whatever you like!
 8. `USE_STATS` controls if stats are printed.
 
 ## Performance

@@ -23,7 +23,7 @@ bool get_state_closed(int, int);
 bool (*get_state)(int, int) = get_state_wrapped;
 
 const unsigned int ROWS = 64;
-unsigned long state[2][ROWS];
+unsigned long long state[2][ROWS];
 const unsigned int COLS = 8 * sizeof(state[0][0]); // bits in type used for state array unsigned long
 const unsigned int DELAY = 25;
 unsigned int generation;
@@ -137,7 +137,7 @@ void update_state (int i, int j) {
     case 4:
       {
         unsigned long s = get_state(i, j);
-      state[!active][i] |= (s << j);
+      state[!active][i] |= ((unsigned long long) s << j);
       break;
       }
     default:
@@ -156,7 +156,7 @@ void randomize() {
    int i;
    active = !active;
    for(i = 0; i < ROWS; i++)
-    state[active][i] = random();
+    state[active][i] = ((unsigned long long) random() << 32) + random();
 }
 
 void loop() {
