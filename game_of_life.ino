@@ -135,11 +135,8 @@ void update_state (int i, int j) {
       state[!active][i] |= (1ULL << j); // type
       break;
     case 4:
-      {
-        unsigned long s = get_state(i, j);
-      state[!active][i] |= ((unsigned long long) s << j);
+      state[!active][i] |= ((unsigned long long) get_state(i, j) << j);
       break;
-      }
     default:
       state[!active][i] &= ~(1ULL << j); // type
   }
