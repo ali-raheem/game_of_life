@@ -1,12 +1,17 @@
 // Copyright 2022 Ali Raheem <github@shoryuken.me>
 // https://github.com/ali-raheem/game_of_life
 
-const char *LIVE = " # ";
-const char *DEAD = " - ";
+#include <MD_MAX72xx.h>
+#define CLK_PIN   13  // or SCK
+#define DATA_PIN  11  // or MOSI
+#define CS_PIN    10  // or SS
+#define HARDWARE_TYPE MD_MAX72XX::FC16_HW
+#define MAX_DEVICES  4
+MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
 #define USE_STALE_LIMIT
 #define USE_GENERATION_LIMIT
-#define PRINT_STATS
+//#define PRINT_STATS
 
 #ifdef USE_GENERATION_LIMIT
 const unsigned int GENERATION_LIMIT = 2000; // Reset after this many generations
@@ -23,9 +28,9 @@ bool get_state_closed(int, int);
 bool (*get_state)(int, int) = get_state_wrapped;
 
 const unsigned int ROWS = 32;
-unsigned long state[2][ROWS];
+unsigned char state[2][ROWS];
 const unsigned int COLS = 8 * sizeof(state[0][0]); // bits in type used for state array unsigned long
-const unsigned int DELAY = 25;
+const unsigned int DELAY = 100;
 unsigned int generation;
 bool active = false;
 
@@ -82,24 +87,13 @@ void initialize() {
 //  state[active][26] = 0x00006300;
 //  state[active][36] = 0x00000c00;
 //  state[active][37] = 0x00000c00;
-  // A loan Glider
-//  state[active][0] = 0x00020000;
-//  state[active][1] = 0x00010000;
-//  state[active][2] = 0x00070000;
-  
-}
-
-void setup() {
-  Serial.begin(115200);
-  Serial.println("Game of Life - Arduino");
-  Serial.println("Copyright 2022 Ali Raheem <github@shoryuken.me>");
-  Serial.println("https://github.com/ali-raheem/game_of_life");
-  int seed = analogRead(0) ^ analogRead(1);
-  randomSeed(seed);
-  Serial.print("Seed: ");
-  Serial.print(seed, DEC);
-  Serial.println();
-  initialize();
+  // Gliders
+//  state[active][0] = 0x2;
+//  state[active][1] = 0x1;
+//  state[active][2] = 0x7;
+//  state[active][5] = 0x20;
+//  state[active][6] = 0x10;
+//  state[active][7] = 0x70;
 }
 
 // Closed topology
@@ -156,23 +150,31 @@ void randomize() {
     state[active][i] = random();
 }
 
+void setup() {
+  mx.begin();
+  mx.control(MD_MAX72XX::INTENSITY, 0);
+  int seed = analogRead(0) ^ analogRead(1);
+  randomSeed(seed);
+  initialize();
+}
+
 void loop() {
-  Serial.println();
   unsigned long timer = millis();
   int i, j, pop = 0;
   for (i = 0; i < ROWS; i++) {
     for (j = 0; j < COLS; j++) {
       bool s = get_state(i, j);
       pop += s;
-      if (s) {
-        Serial.print(LIVE);
-      } else {
-        Serial.print(DEAD);
-      }
       update_state(i, j);
     }
-    Serial.println();
   }
+  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
+  mx.clear();
+  for (uint8_t j = 0; j < mx.getDeviceCount(); j++)
+    mx.setBuffer(((j+1)*COLS)-1, COLS, (uint8_t *) &state[active][j * COLS]);
+  mx.transform(MD_MAX72XX::TRC);
+  mx.transform(MD_MAX72XX::TRC);
+  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
   if (pop < 3) {
     initialize();
   } else {
@@ -192,16 +194,6 @@ void loop() {
   #endif
     generation++;
     flip();
-    #ifdef PRINT_STATS
-    timer = millis() - timer;
-    Serial.print("Generation: ");
-    Serial.print(generation, DEC);
-    Serial.print(" Population: ");
-    Serial.print(pop, DEC);
-    Serial.print(" Render time: ");
-    Serial.print(timer, DEC);
-    Serial.print("ms");
-    #endif
     delay(DELAY);
       #ifdef USE_GENERATION_LIMIT
       }
