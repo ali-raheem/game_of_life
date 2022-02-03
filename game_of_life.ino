@@ -33,22 +33,25 @@ uint32_t DELAY = 200;
 uint16_t generation;
 bool active = false;
 
-//void showTime() {
-//  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
-//  mx.clear();
-//  mx.setChar(COLS-2, '8');
-//  mx.setChar(2*COLS - 2, '2');
-//  mx.setChar(3*COLS - 2, '3');
-//  mx.setChar(4*COLS - 2, '2');
-//  mx.setPoint(5, 16, 1);
-//  mx.setPoint(2, 16, 1);
-//  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
-//  delay(2000);
-//  mx.clear();
-//}
+void showTime() {
+  char count[5];
+  static volatile unsigned int counter = 1;
+  snprintf(count, 5, "%04d", counter++);
+  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
+  mx.clear();
+  mx.setChar(5, count[3]);
+  mx.setChar(13, count[2]);
+  mx.setChar(21, count[1]);
+  mx.setChar(29, count[0]);
+ // mx.setPoint(5, 16, 1);
+  //mx.setPoint(2, 16, 1);
+  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
+  delay(2000);
+  mx.clear();
+}
 
 void initialize() {
-  //showTime();
+  showTime();
   generation = 0;
   
 #ifdef USE_STALE_LIMIT
