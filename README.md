@@ -4,7 +4,7 @@ A simple Arduino sketch for Conway's Game of Life.
 
 The goal was to be somewhat light on memory - each cell state is held by a single bit.
 
-Serial branch Uses 2 frame buffers which could be simplified and the algorithim could do with some optimizing.
+Serial branch Uses 1 frame buffer + 3 Line buffers (this can be cut down to 2 if a close topology is needed) and the algorithim could do with some optimizing.
 
 Master is intended to work with 4 FC16 MAX72XX boards.
 
@@ -33,21 +33,24 @@ Even 64x64 runs okay with serial printing seeming to be the biggest bottle neck.
 
 On the cheapest arduino clone board I can find labelled only "nano" here is the Arduino IDE output for the Gosper Gun demo on a 32x40 board with wrapping topology, as seen above.
 
+Builds below include MD_MAX72XX library and avr-gcc support for long and long long arithmetic.
+
 ### 32x40
 
 Big enough for a Gosper Gun.
 
 ```
-Sketch uses 3198 bytes (10%) of program storage space. Maximum is 30720 bytes.
-Global variables use 673 bytes (32%) of dynamic memory, leaving 1375 bytes for local variables. Maximum is 2048 bytes.
+Sketch uses 9142 bytes (29%) of program storage space. Maximum is 30720 bytes.
+Global variables use 242 bytes (11%) of dynamic memory, leaving 1806 bytes for local variables. Maximum is 2048 bytes.
 ```
 
 Every other implementation I've seen would use 32*40 bytes for a single frame buffer. A stonking 1280 bytes alone. Of the ones I tested (stripping away printing) all had circa 4KB globals.
 
-### 64x64 (uses avr-gxx unsigned long long)
+### 64x64 (uses avr-gcc unsigned long long)
 ```
-Sketch uses 3652 bytes (11%) of program storage space. Maximum is 30720 bytes.
-Global variables use 629 bytes (30%) of dynamic memory, leaving 1419 bytes for local variables. Maximum is 2048 bytes.
+Sketch uses 9360 bytes (30%) of program storage space. Maximum is 30720 bytes.
+Global variables use 606 bytes (29%) of dynamic memory, leaving 1442 bytes for local variables. Maximum is 2048 bytes.
+
 ```
 
 ## Branches

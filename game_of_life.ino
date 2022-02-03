@@ -9,7 +9,7 @@
 #define MAX_DEVICES  4
 MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
-#define USE_STALE_LIMIT
+//#define USE_STALE_LIMIT
 #define USE_GENERATION_LIMIT
 
 #ifdef USE_GENERATION_LIMIT
@@ -59,7 +59,7 @@ void initialize() {
 #endif
 
   // randomize will intialise them... randomly.
-  randomize();
+  //randomize();
   // Gliders
   state[0] = 0x2;
   state[1] = 0x1;
@@ -158,7 +158,7 @@ void loop() {
     if (i > 1)  state[i - 1] = state[activeLineBuffer];
   }
   state[0] = state[ROWS + 2];
-  state[ROWS - 1] = state[activeLineBuffer - 1];
+  state[ROWS - 1] = state[ROWS + (i % 2)];
   render();
   if (pop < 3) {
     initialize();
