@@ -11,30 +11,44 @@ MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
 #define USE_STALE_LIMIT
 #define USE_GENERATION_LIMIT
-//#define PRINT_STATS
 
 #ifdef USE_GENERATION_LIMIT
-const unsigned int GENERATION_LIMIT = 2000; // Reset after this many generations
+const uint16_t GENERATION_LIMIT = 2000; // Reset after this many generations
 #endif
 
 #ifdef USE_STALE_LIMIT
-const unsigned int STALE_LIMIT = 10; // Reset if population not changed in STALE_LIMIT generations
-unsigned int last_pop;
-unsigned int stale;
+const uint8_t STALE_LIMIT = 10; // Reset if population not changed in STALE_LIMIT generations
+uint16_t last_pop;
+uint8_t stale;
 #endif
 
 bool get_state_wrapped(int, int);
 bool get_state_closed(int, int);
 bool (*get_state)(int, int) = get_state_wrapped;
 
-const unsigned int ROWS = 32;
-unsigned char state[2][ROWS];
-const unsigned int COLS = 8 * sizeof(state[0][0]); // bits in type used for state array unsigned long
-const unsigned int DELAY = 100;
-unsigned int generation;
+const uint8_t ROWS = 8;
+uint32_t state[2][ROWS];
+const uint8_t COLS = 8 * sizeof(state[0][0]); // bits in type used for state array unsigned long
+uint32_t DELAY = 200;
+uint16_t generation;
 bool active = false;
 
+//void showTime() {
+//  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
+//  mx.clear();
+//  mx.setChar(COLS-2, '8');
+//  mx.setChar(2*COLS - 2, '2');
+//  mx.setChar(3*COLS - 2, '3');
+//  mx.setChar(4*COLS - 2, '2');
+//  mx.setPoint(5, 16, 1);
+//  mx.setPoint(2, 16, 1);
+//  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
+//  delay(2000);
+//  mx.clear();
+//}
+
 void initialize() {
+  //showTime();
   generation = 0;
   
 #ifdef USE_STALE_LIMIT
@@ -129,7 +143,7 @@ void update_state (int i, int j) {
       state[!active][i] |= (1UL << j); // type
       break;
     case 4:
-      state[!active][i] |= ((unsigned long) get_state(i, j) << j);
+      state[!active][i] |= ((uint32_t) get_state(i, j) << j);
       break;
     default:
       state[!active][i] &= ~(1UL << j); // type
@@ -150,6 +164,27 @@ void randomize() {
     state[active][i] = random();
 }
 
+void sendBlock(uint8_t r, uint8_t c) {
+  uint8_t block[8];
+  uint8_t *block_state = (uint8_t *) state[active];
+  block_state += c + 32 * r;
+  uint8_t i;
+  for (i = 0; i < 8; i++)
+      block[i] = block_state[i * 4];
+  mx.setBuffer((c + 1) * ROWS - 1, ROWS, block);
+}
+
+void render(){
+  uint8_t i, j;
+  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
+  mx.clear();
+  for(i = 0; i < ROWS/8; i++)
+    for(j = 0; j < COLS/8; j++)
+      sendBlock(i, j);
+  mx.transform(MD_MAX72XX::TRC);
+  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
+}
+
 void setup() {
   mx.begin();
   mx.control(MD_MAX72XX::INTENSITY, 0);
@@ -159,7 +194,7 @@ void setup() {
 }
 
 void loop() {
-  unsigned long timer = millis();
+  uint32_t timer = millis();
   int i, j, pop = 0;
   for (i = 0; i < ROWS; i++) {
     for (j = 0; j < COLS; j++) {
@@ -168,13 +203,7 @@ void loop() {
       update_state(i, j);
     }
   }
-  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
-  mx.clear();
-  for (uint8_t j = 0; j < mx.getDeviceCount(); j++)
-    mx.setBuffer(((j+1)*COLS)-1, COLS, (uint8_t *) &state[active][j * COLS]);
-  mx.transform(MD_MAX72XX::TRC);
-  mx.transform(MD_MAX72XX::TRC);
-  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
+  render();
   if (pop < 3) {
     initialize();
   } else {
