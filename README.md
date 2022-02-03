@@ -4,7 +4,9 @@ A simple Arduino sketch for Conway's Game of Life.
 
 The goal was to be somewhat light on memory - each cell state is held by a single bit.
 
-Uses 2 frame buffers which could be simplified and the algorithim could do with some optimizing.
+Serial branch Uses 2 frame buffers which could be simplified and the algorithim could do with some optimizing.
+
+Master is intended to work with 4 FC16 MAX72XX boards.
 
 ## Settings
 
@@ -55,6 +57,7 @@ Global variables use 629 bytes (30%) of dynamic memory, leaving 1419 bytes for l
 * `unroll` - Unrolling the inner loop and manually reducing some calculations - no benefit
 * `border` - Print a silly border around it.
 * `64bit` - The 64x64 version using avr-gcc extension
+* `Serial` - Serial output
 
 ## Screenshots
 ![Screenshot of the sketch running with serial output](screenshot.png).

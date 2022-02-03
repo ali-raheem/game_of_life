@@ -13,11 +13,11 @@ MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 #define USE_GENERATION_LIMIT
 
 #ifdef USE_GENERATION_LIMIT
-const uint16_t GENERATION_LIMIT = 2000; // Reset after this many generations
+const uint16_t GENERATION_LIMIT = 2000;
 #endif
 
 #ifdef USE_STALE_LIMIT
-const uint8_t STALE_LIMIT = 10; // Reset if population not changed in STALE_LIMIT generations
+const uint8_t STALE_LIMIT = 10;
 uint16_t last_pop;
 uint8_t stale;
 #endif
@@ -27,11 +27,11 @@ bool get_state_closed(int, int);
 bool (*get_state)(int, int) = get_state_wrapped;
 
 const uint8_t ROWS = 8;
-uint32_t state[2][ROWS];
-const uint8_t COLS = 8 * sizeof(state[0][0]); // bits in type used for state array unsigned long
+uint32_t state[ROWS + 3];
+const uint8_t COLS = 8 * sizeof(state[0]);
 uint32_t DELAY = 200;
 uint16_t generation;
-bool active = false;
+uint8_t activeLineBuffer = ROWS;
 
 void showTime() {
   char count[5];
@@ -58,66 +58,22 @@ void initialize() {
   last_pop = stale = 0;
 #endif
 
-  // flip will initialise the frame buffers to 0
   // randomize will intialise them... randomly.
-  flip();
-  flip();
   randomize();
-  
-  // Note when setting these the field it is mirrored
-  // Gosper Gun Use at least 40 ROWS!
-  // With eater
-//  state[active][2] =  0x00003000;
-//  state[active][3] =  0x00003000;
-//  state[active][12] = 0x00007000;
-//  state[active][13] = 0x00008800;
-//  state[active][14] = 0x00010400;
-//  state[active][15] = 0x00010400;
-//  state[active][16] = 0x00002000;
-//  state[active][17] = 0x00008800;
-//  state[active][18] = 0x00007000;
-//  state[active][19] = 0x00002000;
-//  state[active][22] = 0x00001c00;
-//  state[active][23] = 0x00001c00;
-//  state[active][24] = 0x00002200;
-//  state[active][25] = 0x000c0000;
-//  state[active][26] = 0x00146300;
-//  state[active][27] = 0x00100000;
-//  state[active][28] = 0x00300000;
-//  state[active][36] = 0x00000c00;
-//  state[active][37] = 0x00000c00;
-  // Gosper Gun Use at least 40 ROWS!
-  //
-//  state[active][2] =  0x00003000;
-//  state[active][3] =  0x00003000;
-//  state[active][12] = 0x00007000;
-//  state[active][13] = 0x00008800;
-//  state[active][14] = 0x00010400;
-//  state[active][15] = 0x00010400;
-//  state[active][16] = 0x00002000;
-//  state[active][17] = 0x00008800;
-//  state[active][18] = 0x00007000;
-//  state[active][19] = 0x00002000;
-//  state[active][22] = 0x00001c00;
-//  state[active][23] = 0x00001c00;
-//  state[active][24] = 0x00002200;
-//  state[active][26] = 0x00006300;
-//  state[active][36] = 0x00000c00;
-//  state[active][37] = 0x00000c00;
   // Gliders
-//  state[active][0] = 0x2;
-//  state[active][1] = 0x1;
-//  state[active][2] = 0x7;
-//  state[active][5] = 0x20;
-//  state[active][6] = 0x10;
-//  state[active][7] = 0x70;
+  state[0] = 0x2;
+  state[1] = 0x1;
+  state[2] = 0x7;
+  state[5] = 0x20;
+  state[6] = 0x10;
+  state[7] = 0x70;
 }
 
 // Closed topology
 bool get_state_closed (int i, int j) {
   if (i < 0 || i > (ROWS-1) || j < 0 || j > (COLS-1))
     return false; // Out of bounds cells count as dead.
-  return ((state[active][i]) >> j) & 1;
+  return ((state[i]) >> j) & 1;
 }
 
 // Wrapped topology
@@ -130,7 +86,7 @@ bool get_state_wrapped (int i, int j) {
     j = COLS - 1;
   if (j > (COLS - 1))
     j = 0;
-  return (state[active][i] >> j) & 1;
+  return (state[i] >> j) & 1;
 }
 
 int sum (int i, int j) {
@@ -143,33 +99,25 @@ int sum (int i, int j) {
 void update_state (int i, int j) {
   switch (sum(i, j)) {
     case 3:
-      state[!active][i] |= (1UL << j); // type
+      state[activeLineBuffer] |= (1UL << j);
       break;
     case 4:
-      state[!active][i] |= ((uint32_t) get_state(i, j) << j);
+      state[activeLineBuffer] |= (((uint32_t) get_state(i, j)) << j);
       break;
     default:
-      state[!active][i] &= ~(1UL << j); // type
+      state[activeLineBuffer] &= ~(1UL << j);
   }
-}
-
-void flip() {
-  int i;
-  for(i = 0; i < ROWS; i++)
-    state[active][i] = 0;
-  active = !active;
 }
 
 void randomize() {
    int i;
-   active = !active;
    for(i = 0; i < ROWS; i++)
-    state[active][i] = random();
+    state[i] = random();
 }
 
 void sendBlock(uint8_t r, uint8_t c) {
   uint8_t block[8];
-  uint8_t *block_state = (uint8_t *) state[active];
+  uint8_t *block_state = (uint8_t *) state;
   block_state += c + 32 * r;
   uint8_t i;
   for (i = 0; i < 8; i++)
@@ -197,15 +145,20 @@ void setup() {
 }
 
 void loop() {
-  uint32_t timer = millis();
   int i, j, pop = 0;
+  activeLineBuffer = ROWS + 2;
   for (i = 0; i < ROWS; i++) {
+    state[activeLineBuffer] = 0;
     for (j = 0; j < COLS; j++) {
       bool s = get_state(i, j);
       pop += s;
       update_state(i, j);
     }
+    activeLineBuffer = ROWS + (i % 2);
+    if (i > 1)  state[i - 1] = state[activeLineBuffer];
   }
+  state[0] = state[ROWS + 2];
+  state[ROWS - 1] = state[activeLineBuffer - 1];
   render();
   if (pop < 3) {
     initialize();
@@ -225,7 +178,6 @@ void loop() {
   } else {
   #endif
     generation++;
-    flip();
     delay(DELAY);
       #ifdef USE_GENERATION_LIMIT
       }
