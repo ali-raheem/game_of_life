@@ -11,7 +11,6 @@ MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
 #define USE_STALE_LIMIT
 #define USE_GENERATION_LIMIT
-//#define PRINT_STATS
 
 #ifdef USE_GENERATION_LIMIT
 const uint16_t GENERATION_LIMIT = 2000;
@@ -29,17 +28,16 @@ bool (*isAlive)(int, int) = isAlive_wrapped;
 
 const uint8_t ROWS = 8;
 uint32_t state[ROWS + 3];
-const uint8_t state_0_buffer = ROWS + 2;
+uint8_t state_0_buffer = ROWS + 2;
 const uint8_t COLS = 8 * sizeof(state[0]);
-const uint32_t FRAME_TIME = 365;
-const uint32_t SHOW_TIME_DELAY = 3420;
+uint32_t DELAY = 365;
 uint16_t generation;
-uint8_t activeLineBuffer;
+uint8_t activeLineBuffer = ROWS;
 
 void showTime() {
   char count[5];
-  static uint8_t mins = 38;
-  static uint8_t hours = 21;
+  static uint8_t mins = 32;
+  static uint8_t hours = 19;
   if(++mins > 59) {
     mins = 0;
     if(++hours > 23)
@@ -49,12 +47,13 @@ void showTime() {
   mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
   mx.clear();
   mx.setChar(5, count[3]);
-  mx.setChar(12, count[2]);
-  mx.setChar(15, ':');
+  mx.setChar(13, count[2]);
   mx.setChar(21, count[1]);
   mx.setChar(29, count[0]);
+ // mx.setPoint(5, 16, 1);
+  //mx.setPoint(2, 16, 1);
   mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
-  delay(SHOW_TIME_DELAY);
+  delay(3420);
   mx.clear();
 }
 
@@ -98,14 +97,21 @@ bool isAlive_wrapped (int i, int j) {
   return (state[i] >> j) & 1;
 }
 
-void nextState (uint16_t i, uint16_t j, uint32_t s, uint8_t sum) {
+int sum (int i, int j) {
+  int s = isAlive(i - 1, j - 1) + isAlive(i - 1, j) + isAlive(i - 1, j + 1) +
+          isAlive(i    , j - 1) + isAlive(i    , j) + isAlive(i    , j + 1) +
+          isAlive(i + 1, j - 1) + isAlive(i + 1, j) + isAlive(i + 1, j + 1);
+  return s;
+}
+
+void nextState (int i, int j) {
   const uint32_t one = 1;
-  switch (sum) {
+  switch (sum(i, j)) {
     case 3:
-      state[activeLineBuffer] |= (one << j);
+      state[activeLineBuffer] |= (one<< j);
       break;
     case 4:
-      state[activeLineBuffer] |= (s << j);
+      state[activeLineBuffer] |= (((uint32_t) isAlive(i, j)) << j);
       break;
     default:
       state[activeLineBuffer] &= ~(one << j);
@@ -144,18 +150,10 @@ uint16_t updateBoard() {
   activeLineBuffer = state_0_buffer;
   for (i = 0; i < ROWS; i++) {
     state[activeLineBuffer] = 0;
-    bool oldState = isAlive(i, 0);
-    uint8_t sum_l = isAlive(i - 1, -1) + isAlive(i, -1) + isAlive(i + 1, -1);
-    uint8_t sum_m = isAlive(i - 1, 0) + oldState + isAlive(i + 1, 0);
     for (j = 0; j < COLS; j++) {
-      bool oldStateR = isAlive(i, j + 1);
-      uint8_t sum_r = isAlive(i - 1, j + 1) + oldStateR + isAlive(i + 1, j + 1);
-      uint8_t liveCells = sum_l + sum_m + sum_r;
-      nextState(i, j, oldState, liveCells);
-      population += oldState;
-      oldState = oldStateR;
-      sum_l = sum_m;
-      sum_m = sum_r;
+      bool s = isAlive(i, j);
+      population += s;
+      nextState(i, j);
     }
     activeLineBuffer = ROWS + (i % 2);
     if (i > 1)  state[i - 1] = state[activeLineBuffer];
@@ -167,12 +165,6 @@ uint16_t updateBoard() {
 }
 
 void setup() {
- #ifdef PRINT_STATS
-  Serial.begin(115200);
-  Serial.println("Game of Life - Arduino");
-  Serial.println("Copyright 2022 Ali Raheem <github@shoryuken.me>");
-  Serial.println("https://github.com/ali-raheem/game_of_life");
- #endif
   mx.begin();
   mx.control(MD_MAX72XX::INTENSITY, 0);
   int seed = analogRead(0) ^ analogRead(1);
@@ -181,18 +173,7 @@ void setup() {
 }
 
 void loop() {
-  uint32_t updateTime = millis();
   uint16_t population = updateBoard();
-  updateTime = millis() - updateTime;
-#ifdef PRINT_STATS
-  Serial.print("Generation:\t");
-  Serial.print(generation, DEC);
-  Serial.print("; Population:\t");
-  Serial.print(population, DEC);
-  Serial.print("; Took:\t");
-  Serial.print(updateTime, DEC);
-  Serial.println("ms.");
-#endif
   render();
   if (population < 3) {
     initialize();
@@ -212,7 +193,7 @@ void loop() {
   } else {
   #endif
     generation++;
-    delay(FRAME_TIME);
+    delay(DELAY);
       #ifdef USE_GENERATION_LIMIT
       }
       #endif
