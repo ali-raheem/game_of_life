@@ -11,7 +11,7 @@ MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
 #define USE_STALE_LIMIT
 #define USE_GENERATION_LIMIT
-//#define PRINT_STATS
+//#define USE_SERIAL
 
 #ifdef USE_GENERATION_LIMIT
 const uint16_t GENERATION_LIMIT = 2000;
@@ -58,9 +58,15 @@ void showTime() {
   mx.clear();
 }
 
+void clearState() {
+  uint8_t i;
+  for(i = 0; i < ROWS + 3; i++)
+    state[i] = 0;
+}
 
 void initialize() {
-  showTime();
+  clearState();
+  //showTime();
   generation = 0;
   
 #ifdef USE_STALE_LIMIT
@@ -120,13 +126,13 @@ void randomize() {
 
 void sendBlock(uint8_t r, uint8_t c) {
   uint8_t block[8];
-  uint8_t *block_state = (uint8_t *) state;
-  block_state += c + 32 * r;
+  uint8_t *stateBlocksStart = (uint8_t *) state;
+  stateBlocksStart += c + COLS * r;
   uint8_t i;
   for (i = 0; i < 8; i++)
-      block[i] = block_state[i * 4];
+      block[i] = stateBlocksStart[i * 4];
       // TODO learn how setBuffer works.
-//  mx.setBuffer(j + i / 8 * COLS, 8, block);
+  mx.setBuffer(c*8 + r*4*8, 8, block);
 }
 
 void render(){
@@ -153,7 +159,7 @@ uint16_t updateBoard() {
     for (j = 0; j < COLS; j++) {
       bool oldStateR = isAlive(i, j + 1);
       mx.setPoint(i % 8, j + i / 8 * COLS, oldState);
-      #ifdef PRINT_STATS
+      #ifdef USE_SERIAL
       if (oldState)
         Serial.print(" # ");
       else
@@ -169,7 +175,7 @@ uint16_t updateBoard() {
     }
     activeLineBuffer = ROWS + (i % 2);
     if (i > 1)  state[i - 1] = state[activeLineBuffer];
-    #ifdef PRINT_STATS
+    #ifdef USE_SERIAL
       Serial.println();
     #endif 
   }
@@ -180,14 +186,17 @@ uint16_t updateBoard() {
 }
 
 void setup() {
- #ifdef PRINT_STATS
+ #ifdef USE_SERIAL
   Serial.begin(115200);
-  Serial.println("Game of Life - Arduino");
+  Serial.println("Game of Life for Arduino");
   Serial.println("Copyright 2022 Ali Raheem <github@shoryuken.me>");
   Serial.println("https://github.com/ali-raheem/game_of_life");
+  uint16_t columnCount = mx.getColumnCount();
+  Serial.print(columnCount, DEC);
  #endif
   mx.begin();
   mx.control(MD_MAX72XX::INTENSITY, 0);
+  mx.clear();
   int seed = analogRead(0) ^ analogRead(1);
   randomSeed(seed);
   initialize();
@@ -200,8 +209,8 @@ void loop() {
   uint16_t population = updateBoard();
   updateTime = millis() - updateTime;
   mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
-  //  render();
-#ifdef PRINT_STATS
+  //render();
+#ifdef USE_SERIAL
   Serial.print("Generation:\t");
   Serial.print(generation, DEC);
   Serial.print("\t Population:\t");
