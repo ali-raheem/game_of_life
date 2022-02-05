@@ -126,7 +126,7 @@ void sendBlock(uint8_t r, uint8_t c) {
   for (i = 0; i < 8; i++)
       block[i] = block_state[i * 4];
       // TODO learn how setBuffer works.
-  mx.setBuffer(c + i / 8 * COLS, 8, block);
+//  mx.setBuffer(j + i / 8 * COLS, 8, block);
 }
 
 void render(){
@@ -194,12 +194,12 @@ void setup() {
 }
 
 void loop() {
-  //mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
-  //mx.clear();
+  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
+  mx.clear();
   uint32_t updateTime = millis();
   uint16_t population = updateBoard();
   updateTime = millis() - updateTime;
- // mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
+  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
   //  render();
 #ifdef PRINT_STATS
   Serial.print("Generation:\t");
