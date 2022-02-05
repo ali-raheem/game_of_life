@@ -6,10 +6,10 @@
 #define DATA_PIN  11  // or MOSI
 #define CS_PIN    10  // or SS
 #define HARDWARE_TYPE MD_MAX72XX::FC16_HW
-#define MAX_DEVICES  4
+#define MAX_DEVICES  16
 MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
-#define USE_STALE_LIMIT
+//#define USE_STALE_LIMIT
 #define USE_GENERATION_LIMIT
 //#define PRINT_STATS
 
@@ -27,19 +27,19 @@ bool isAlive_wrapped(int, int);
 bool isAlive_closed(int, int);
 bool (*isAlive)(int, int) = isAlive_wrapped;
 
-const uint8_t ROWS = 8;
+const uint8_t ROWS = 32;
 uint32_t state[ROWS + 3];
-const uint8_t state_0_buffer = ROWS + 2;
+const uint8_t firstRowBuffer = ROWS + 2;
 const uint8_t COLS = 8 * sizeof(state[0]);
-const uint32_t FRAME_TIME = 365;
-const uint32_t SHOW_TIME_DELAY = 3420;
+const uint32_t FRAME_TIME = 10;
+const uint32_t SHOW_TIME_DELAY = 4000;
 uint16_t generation;
 uint8_t activeLineBuffer;
 
 void showTime() {
   char count[5];
-  static uint8_t mins = 38;
-  static uint8_t hours = 21;
+  static uint8_t mins = 30;
+  static uint8_t hours = 23;
   if(++mins > 59) {
     mins = 0;
     if(++hours > 23)
@@ -60,7 +60,7 @@ void showTime() {
 
 
 void initialize() {
-  showTime();
+  //showTime();
   generation = 0;
   
 #ifdef USE_STALE_LIMIT
@@ -125,7 +125,8 @@ void sendBlock(uint8_t r, uint8_t c) {
   uint8_t i;
   for (i = 0; i < 8; i++)
       block[i] = block_state[i * 4];
-  mx.setBuffer((c + 1) * ROWS - 1, ROWS, block);
+      // TODO learn how setBuffer works.
+  mx.setBuffer(c + i / 8 * COLS, 8, block);
 }
 
 void render(){
@@ -135,13 +136,15 @@ void render(){
   for(i = 0; i < ROWS/8; i++)
     for(j = 0; j < COLS/8; j++)
       sendBlock(i, j);
-  mx.transform(MD_MAX72XX::TRC);
+      // TODO: Transforms needed?
+//  mx.transform(MD_MAX72XX::TRC);
+//  mx.transform(MD_MAX72XX::TRC);
   mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
 }
 
 uint16_t updateBoard() {
   uint16_t i, j, population = 0;
-  activeLineBuffer = state_0_buffer;
+  activeLineBuffer = firstRowBuffer;
   for (i = 0; i < ROWS; i++) {
     state[activeLineBuffer] = 0;
     bool oldState = isAlive(i, 0);
@@ -149,6 +152,13 @@ uint16_t updateBoard() {
     uint8_t sum_m = isAlive(i - 1, 0) + oldState + isAlive(i + 1, 0);
     for (j = 0; j < COLS; j++) {
       bool oldStateR = isAlive(i, j + 1);
+      mx.setPoint(i % 8, j + i / 8 * COLS, oldState);
+      #ifdef PRINT_STATS
+      if (oldState)
+        Serial.print(" # ");
+      else
+        Serial.print(" - ");
+      #endif
       uint8_t sum_r = isAlive(i - 1, j + 1) + oldStateR + isAlive(i + 1, j + 1);
       uint8_t liveCells = sum_l + sum_m + sum_r;
       nextState(i, j, oldState, liveCells);
@@ -159,8 +169,11 @@ uint16_t updateBoard() {
     }
     activeLineBuffer = ROWS + (i % 2);
     if (i > 1)  state[i - 1] = state[activeLineBuffer];
+    #ifdef PRINT_STATS
+      Serial.println();
+    #endif 
   }
-  state[0] = state[state_0_buffer];
+  state[0] = state[firstRowBuffer];
   state[ROWS - 1] = state[ROWS + (i % 2)];
   
   return population;
@@ -181,19 +194,22 @@ void setup() {
 }
 
 void loop() {
+  //mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
+  //mx.clear();
   uint32_t updateTime = millis();
   uint16_t population = updateBoard();
   updateTime = millis() - updateTime;
+ // mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
+  //  render();
 #ifdef PRINT_STATS
   Serial.print("Generation:\t");
   Serial.print(generation, DEC);
-  Serial.print("; Population:\t");
+  Serial.print("\t Population:\t");
   Serial.print(population, DEC);
-  Serial.print("; Took:\t");
+  Serial.print("\t Took:\t");
   Serial.print(updateTime, DEC);
   Serial.println("ms.");
 #endif
-  render();
   if (population < 3) {
     initialize();
   } else {
