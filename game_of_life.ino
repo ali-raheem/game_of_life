@@ -9,7 +9,7 @@
 #define MAX_DEVICES  16
 MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
-//#define USE_STALE_LIMIT
+#define USE_STALE_LIMIT
 #define USE_GENERATION_LIMIT
 //#define PRINT_STATS
 
@@ -31,8 +31,8 @@ const uint8_t ROWS = 32;
 uint32_t state[ROWS + 3];
 const uint8_t firstRowBuffer = ROWS + 2;
 const uint8_t COLS = 8 * sizeof(state[0]);
-const uint32_t FRAME_TIME = 10;
-const uint32_t SHOW_TIME_DELAY = 4000;
+const uint32_t FRAME_TIME = 100;
+const uint32_t SHOW_TIME_DELAY = 1000;
 uint16_t generation;
 uint8_t activeLineBuffer;
 
@@ -60,7 +60,7 @@ void showTime() {
 
 
 void initialize() {
-  //showTime();
+  showTime();
   generation = 0;
   
 #ifdef USE_STALE_LIMIT
