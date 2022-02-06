@@ -46,7 +46,7 @@ uint32_t frame[32] = {
 
 #define USE_STALE_LIMIT
 #define USE_GENERATION_LIMIT
-#define USE_SERIAL
+//#define USE_SERIAL
 
 #ifdef USE_GENERATION_LIMIT
 const uint16_t GENERATION_LIMIT = 2000;
@@ -102,7 +102,7 @@ void clearState() {
 void initialize() {
   clearState();
   render((uint8_t *)frame);
-  delay(10000);
+  delay(1000);
   //showTime();
   generation = 0;
   
@@ -197,7 +197,7 @@ uint16_t updateBoard() {
     uint8_t sum_m = isAlive(i - 1, 0) + oldState + isAlive(i + 1, 0);
     for (j = 0; j < COLS; j++) {
       bool oldStateR = isAlive(i, j + 1);
-      mx.setPoint(i % 8, j + i / 8 * COLS, oldState);
+      //mx.setPoint(i % 8, j + i / 8 * COLS, oldState);
       #ifdef USE_SERIAL
       if (oldState)
         Serial.print(" # ");
@@ -245,13 +245,13 @@ void setup() {
 }
 
 void loop() {
-  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
-  mx.clear();
+  //mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
+  //mx.clear();
   uint32_t updateTime = millis();
   uint16_t population = updateBoard();
   updateTime = millis() - updateTime;
-  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
-  //render();
+  //mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
+  render((uint8_t *) state);
 #ifdef USE_SERIAL
   Serial.print("Generation:\t");
   Serial.print(generation, DEC);
