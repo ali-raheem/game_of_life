@@ -342,11 +342,11 @@ void loop() {
   Serial.println("ms.");
 #endif
   if (population < 3) {
-    initialize();
+    reset();
   } else {
 #ifdef USE_STALE_LIMIT
   if (++staleCount > STALE_LIMIT) {
-    initialize();
+    reset();
   } else {
     if (previousPopulation != population) {
       staleCount = 0;
@@ -355,7 +355,7 @@ void loop() {
 #endif
 #ifdef USE_GENERATION_LIMIT
   if (generation > GENERATION_LIMIT) {
-    initialize();
+    reset();
   } else {
 #endif
     generation++;
@@ -367,4 +367,8 @@ void loop() {
     }
 #endif
   }
+}
+
+void reset() {
+  asm volatile (" jmp 0");
 }
