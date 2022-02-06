@@ -8,7 +8,10 @@ Serial branch Uses 1 frame buffer + 3 Line buffers (this can be cut down to 2 if
 
 Master is intended to work with 4 FC16 MAX72XX boards.
 
+![Output to an LED matrix](LED-32x32.gif)
+
 ![Output to an LED matrix](LED-32x32.jpg)
+
 
 
 ## Settings
