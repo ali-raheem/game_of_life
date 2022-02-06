@@ -32,12 +32,127 @@ uint32_t state[ROWS + 3];
 const uint8_t firstRowBuffer = ROWS + 2;
 const uint8_t COLS = 8 * sizeof(state[0]);
 const uint32_t FRAME_TIME = 100;
-const uint32_t SHOW_TIME_DELAY = 1000;
+const uint32_t SHOW_TIME_DELAY = 5000;
+const uint8_t LED_BRIGHTNESS = 0; // 0-7
 uint16_t generation;
 uint8_t activeLineBuffer;
 
+//uint32_t frame[32] = {
+//        0x3FFFFFFC,
+//        0x40000002,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0xFFFFFFFF,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x40000002,
+//        0x3FFFFFFC
+//};
+//
+//uint32_t heart[32] = {
+//        0x00000000,
+//        0x00000000,
+//        0x00000000,
+//        0x07F83F80,
+//        0x1806C070,
+//        0x30010018,
+//        0x4002000C,
+//        0xC0060006,
+//        0x80040002,
+//        0x80000002,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0x80000001,
+//        0xC0000001,
+//        0x40000002,
+//        0x60000006,
+//        0x2000000C,
+//        0x10000018,
+//        0x18000030,
+//        0x0C000060,
+//        0x060000C0,
+//        0x03000180,
+//        0x01800300,
+//        0x00C00600,
+//        0x00600C00,
+//        0x00301800,
+//        0x00186000,
+//        0x000D8000,
+//        0x00020000
+//};
+//
+//uint32_t knob[32] = {
+//        0x00000000,
+//        0x00000000,
+//        0x00000000,
+//        0x00000000,
+//        0x00000000,
+//        0x3E000000,
+//        0x62000000,
+//        0x43E00000,
+//        0x623FE000,
+//        0x66003FC0,
+//        0x64000000,
+//        0x44000000,
+//        0x44000000,
+//        0x64000000,
+//        0x34000000,
+//        0x0F000000,
+//        0x01E00000,
+//        0x003C0000,
+//        0x0007F810,
+//        0x00001818,
+//        0x0000300C,
+//        0x00002004,
+//        0x00006006,
+//        0x00004002,
+//        0x00004002,
+//        0x00004102,
+//        0x00004182,
+//        0x00006086,
+//        0x000038CC,
+//        0x00000F78,
+//        0x00000000,
+//        0x00000000
+//};
+
+void printText(const uint8_t r, const char data[6]) {
+  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
+  mx.setChar(5+r*32, data[4]);
+  mx.setChar(12+r*32, data[3]);
+  mx.setChar(15+r*32, data[2]);
+  mx.setChar(21+r*32, data[1]);
+  mx.setChar(29+r*32, data[0]);
+  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
+}
 void showTime() {
-  char count[5];
+  char count[6];
   static uint8_t mins = 30;
   static uint8_t hours = 23;
   if(++mins > 59) {
@@ -45,17 +160,15 @@ void showTime() {
     if(++hours > 23)
       hours = 0;
   }
-  snprintf(count, 5, "%02d%02d", hours, mins);
-  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
-  mx.clear();
-  mx.setChar(5, count[3]);
-  mx.setChar(12, count[2]);
-  mx.setChar(15, ':');
-  mx.setChar(21, count[1]);
-  mx.setChar(29, count[0]);
-  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
-  delay(SHOW_TIME_DELAY);
-  mx.clear();
+  snprintf(count, 6, "%02d:%02d", hours, mins);
+  printText(1, count);
+}
+void showDate() {
+  char count[6];
+  static uint8_t day = 06;
+  static uint8_t month = 02;
+  snprintf(count, 6, "%02d.%02d", day, month);
+  printText(2, count);
 }
 
 void clearState() {
@@ -66,7 +179,14 @@ void clearState() {
 
 void initialize() {
   clearState();
-  //showTime();
+//  render((uint8_t *) frame);
+//  showTime();
+//  showDate();
+//  delay(SHOW_TIME_DELAY);
+//  render((uint8_t *) heart);
+//  delay(SHOW_TIME_DELAY);
+//    render((uint8_t *) knob);
+//  delay(SHOW_TIME_DELAY);
   generation = 0;
   
 #ifdef USE_STALE_LIMIT
@@ -87,7 +207,7 @@ void initialize() {
 // Closed topology
 bool isAlive_closed (int i, int j) {
   if (i < 0 || i > (ROWS-1) || j < 0 || j > (COLS-1))
-    return false; // Out of bounds cells count as dead.
+    return false;
   return ((state[i]) >> j) & 1;
 }
 
@@ -124,27 +244,23 @@ void randomize() {
     state[i] = random();
 }
 
-void sendBlock(uint8_t r, uint8_t c) {
+void sendBlock(uint8_t *data, uint8_t r, uint8_t c) {
   uint8_t block[8];
-  uint8_t *stateBlocksStart = (uint8_t *) state;
-  stateBlocksStart += c + COLS * r;
+  uint8_t *blocksStart = data  + (COLS * r) + c;
   uint8_t i;
   for (i = 0; i < 8; i++)
-      block[i] = stateBlocksStart[i * 4];
-      // TODO learn how setBuffer works.
-  mx.setBuffer(c*8 + r*4*8, 8, block);
+      block[i] = blocksStart[(COLS/8) * i];
+  mx.setBuffer(8 * ((r * (COLS/8)) + c + 1) - 1, 8, block);
 }
 
-void render(){
+void render(uint8_t *data){
   uint8_t i, j;
   mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
   mx.clear();
   for(i = 0; i < ROWS/8; i++)
     for(j = 0; j < COLS/8; j++)
-      sendBlock(i, j);
-      // TODO: Transforms needed?
-//  mx.transform(MD_MAX72XX::TRC);
-//  mx.transform(MD_MAX72XX::TRC);
+      sendBlock(data, i, j);
+  mx.transform(MD_MAX72XX::TRC);
   mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
 }
 
@@ -158,13 +274,12 @@ uint16_t updateBoard() {
     uint8_t sum_m = isAlive(i - 1, 0) + oldState + isAlive(i + 1, 0);
     for (j = 0; j < COLS; j++) {
       bool oldStateR = isAlive(i, j + 1);
-      mx.setPoint(i % 8, j + i / 8 * COLS, oldState);
-      #ifdef USE_SERIAL
+#ifdef USE_SERIAL
       if (oldState)
         Serial.print(" # ");
       else
         Serial.print(" - ");
-      #endif
+#endif
       uint8_t sum_r = isAlive(i - 1, j + 1) + oldStateR + isAlive(i + 1, j + 1);
       uint8_t liveCells = sum_l + sum_m + sum_r;
       nextState(i, j, oldState, liveCells);
@@ -175,41 +290,41 @@ uint16_t updateBoard() {
     }
     activeLineBuffer = ROWS + (i % 2);
     if (i > 1)  state[i - 1] = state[activeLineBuffer];
-    #ifdef USE_SERIAL
+#ifdef USE_SERIAL
       Serial.println();
-    #endif 
+#endif 
   }
   state[0] = state[firstRowBuffer];
   state[ROWS - 1] = state[ROWS + (i % 2)];
-  
   return population;
 }
 
 void setup() {
- #ifdef USE_SERIAL
+  mx.begin();
+  mx.clear();
+  mx.control(MD_MAX72XX::INTENSITY, LED_BRIGHTNESS);
+#ifdef USE_SERIAL
   Serial.begin(115200);
   Serial.println("Game of Life for Arduino");
   Serial.println("Copyright 2022 Ali Raheem <github@shoryuken.me>");
   Serial.println("https://github.com/ali-raheem/game_of_life");
   uint16_t columnCount = mx.getColumnCount();
   Serial.print(columnCount, DEC);
- #endif
-  mx.begin();
-  mx.control(MD_MAX72XX::INTENSITY, 0);
-  mx.clear();
+#endif
   int seed = analogRead(0) ^ analogRead(1);
   randomSeed(seed);
   initialize();
 }
 
 void loop() {
-  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
-  mx.clear();
+#ifdef USE_SERIAL
   uint32_t updateTime = millis();
+#endif
   uint16_t population = updateBoard();
+#ifdef USE_SERIAL
   updateTime = millis() - updateTime;
-  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
-  //render();
+#endif
+  render((uint8_t *) state);
 #ifdef USE_SERIAL
   Serial.print("Generation:\t");
   Serial.print(generation, DEC);
@@ -222,7 +337,7 @@ void loop() {
   if (population < 3) {
     initialize();
   } else {
-  #ifdef USE_STALE_LIMIT
+#ifdef USE_STALE_LIMIT
   if (++staleCount > STALE_LIMIT) {
     initialize();
   } else {
@@ -230,19 +345,19 @@ void loop() {
       staleCount = 0;
       previousPopulation = population;
     }
-  #endif
-  #ifdef USE_GENERATION_LIMIT
+#endif
+#ifdef USE_GENERATION_LIMIT
   if (generation > GENERATION_LIMIT) {
     initialize();
   } else {
-  #endif
+#endif
     generation++;
     delay(FRAME_TIME);
-      #ifdef USE_GENERATION_LIMIT
+#ifdef USE_GENERATION_LIMIT
       }
-      #endif
-    #ifdef USE_STALE_LIMIT
+#endif
+#ifdef USE_STALE_LIMIT
     }
-    #endif
+#endif
   }
 }
