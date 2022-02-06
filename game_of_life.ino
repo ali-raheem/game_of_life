@@ -1,6 +1,8 @@
 // Copyright 2022 Ali Raheem <github@shoryuken.me>
 // https://github.com/ali-raheem/game_of_life
 
+#include <avr/wdt.h>
+
 #include <MD_MAX72xx.h>
 #define CLK_PIN   13  // or SCK
 #define DATA_PIN  11  // or MOSI
@@ -178,6 +180,7 @@ void clearState() {
 }
 
 void initialize() {
+  wdt_disable();
   clearState();
 //  render((uint8_t *) frame);
 //  showTime();
@@ -202,6 +205,7 @@ void initialize() {
 //  state[5] = 0x20;
 //  state[6] = 0x10;
 //  state[7] = 0x70;
+  wdt_enable(WDTO_1S);
 }
 
 // Closed topology
@@ -317,6 +321,7 @@ void setup() {
 }
 
 void loop() {
+  wdt_reset();
 #ifdef USE_SERIAL
   uint32_t updateTime = millis();
 #endif
@@ -330,6 +335,8 @@ void loop() {
   Serial.print(generation, DEC);
   Serial.print("\t Population:\t");
   Serial.print(population, DEC);
+  Serial.print("\t Stale:\t");
+  Serial.print(staleCount, DEC);
   Serial.print("\t Took:\t");
   Serial.print(updateTime, DEC);
   Serial.println("ms.");
