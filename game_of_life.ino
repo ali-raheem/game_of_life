@@ -9,6 +9,41 @@
 #define MAX_DEVICES  16
 MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
+uint32_t frame[32] = {
+        0x3FFFFFFC,
+        0x40000002,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0xFFFFFFFF,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x40000002,
+        0x3FFFFFFC
+};
+
 #define USE_STALE_LIMIT
 #define USE_GENERATION_LIMIT
 //#define USE_SERIAL
@@ -66,6 +101,8 @@ void clearState() {
 
 void initialize() {
   clearState();
+  render((uint8_t *)frame);
+  delay(1000);
   //showTime();
   generation = 0;
   
@@ -124,27 +161,29 @@ void randomize() {
     state[i] = random();
 }
 
-void sendBlock(uint8_t r, uint8_t c) {
+void sendBlock(uint8_t *data, uint8_t r, uint8_t c) {
   uint8_t block[8];
-  uint8_t *stateBlocksStart = (uint8_t *) state;
-  stateBlocksStart += c + COLS * r;
+  uint8_t *blocksStart = data  + (32 * r) + c;
   uint8_t i;
-  for (i = 0; i < 8; i++)
-      block[i] = stateBlocksStart[i * 4];
-      // TODO learn how setBuffer works.
-  mx.setBuffer(c*8 + r*4*8, 8, block);
+  Serial.print("Block:");
+  Serial.print(8 * ((r * 4) + c + 1), DEC);
+  Serial.println();
+  for (i = 0; i < 8; i++) {
+      block[i] = blocksStart[4 * i];
+      Serial.print(block[i], HEX);
+      Serial.println();
+  }
+  mx.setBuffer(8 * ((r * 4) + c + 1)-1, 8, block);
 }
 
-void render(){
+void render(uint8_t *data){
   uint8_t i, j;
   mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
   mx.clear();
   for(i = 0; i < ROWS/8; i++)
     for(j = 0; j < COLS/8; j++)
-      sendBlock(i, j);
-      // TODO: Transforms needed?
-//  mx.transform(MD_MAX72XX::TRC);
-//  mx.transform(MD_MAX72XX::TRC);
+      sendBlock(data, i, j);
+  mx.transform(MD_MAX72XX::TRC);
   mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
 }
 
@@ -158,7 +197,7 @@ uint16_t updateBoard() {
     uint8_t sum_m = isAlive(i - 1, 0) + oldState + isAlive(i + 1, 0);
     for (j = 0; j < COLS; j++) {
       bool oldStateR = isAlive(i, j + 1);
-      mx.setPoint(i % 8, j + i / 8 * COLS, oldState);
+      //mx.setPoint(i % 8, j + i / 8 * COLS, oldState);
       #ifdef USE_SERIAL
       if (oldState)
         Serial.print(" # ");
@@ -186,6 +225,9 @@ uint16_t updateBoard() {
 }
 
 void setup() {
+  mx.begin();
+  mx.clear();
+  mx.control(MD_MAX72XX::INTENSITY, 7);
  #ifdef USE_SERIAL
   Serial.begin(115200);
   Serial.println("Game of Life for Arduino");
@@ -194,22 +236,22 @@ void setup() {
   uint16_t columnCount = mx.getColumnCount();
   Serial.print(columnCount, DEC);
  #endif
-  mx.begin();
-  mx.control(MD_MAX72XX::INTENSITY, 0);
-  mx.clear();
+  //mx.begin();
+ // mx.control(MD_MAX72XX::INTENSITY, 0);
+  //mx.clear();
   int seed = analogRead(0) ^ analogRead(1);
   randomSeed(seed);
   initialize();
 }
 
 void loop() {
-  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
-  mx.clear();
+  //mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
+  //mx.clear();
   uint32_t updateTime = millis();
   uint16_t population = updateBoard();
   updateTime = millis() - updateTime;
-  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
-  //render();
+  //mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
+  render((uint8_t *) state);
 #ifdef USE_SERIAL
   Serial.print("Generation:\t");
   Serial.print(generation, DEC);
