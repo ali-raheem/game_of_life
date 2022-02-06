@@ -16,8 +16,8 @@ uint32_t frame[32] = {
         0x80000001,
         0x80000001,
         0x80000001,
-        0xFFFFFFFF,
         0x80000001,
+        0xFFFFFFFF,
         0x80000001,
         0x80000001,
         0x80000001,
@@ -46,7 +46,7 @@ uint32_t frame[32] = {
 
 #define USE_STALE_LIMIT
 #define USE_GENERATION_LIMIT
-//#define USE_SERIAL
+#define USE_SERIAL
 
 #ifdef USE_GENERATION_LIMIT
 const uint16_t GENERATION_LIMIT = 2000;
@@ -163,24 +163,27 @@ void randomize() {
 
 void sendBlock(uint8_t *data, uint8_t r, uint8_t c) {
   uint8_t block[8];
-  uint8_t *blocksStart = data  + 4 * r + c;
+  uint8_t *blocksStart = data  + (32 * r) + c;
   uint8_t i;
-  for (i = 0; i < 8; i++)
+  Serial.print("Block:");
+  Serial.print(8 * ((r * 4) + c + 1), DEC);
+  Serial.println();
+  for (i = 0; i < 8; i++) {
       block[i] = blocksStart[4 * i];
-      // TODO learn how setBuffer works.
-  mx.setBuffer(8 * (r * 4 + c + 1), 8, block);
+      Serial.print(block[i], HEX);
+      Serial.println();
+  }
+  mx.setBuffer(8 * ((r * 4) + c + 1)-1, 8, block);
 }
 
 void render(uint8_t *data){
   uint8_t i, j;
- // mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
+  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
   mx.clear();
   for(i = 0; i < ROWS/8; i++)
     for(j = 0; j < COLS/8; j++)
       sendBlock(data, i, j);
-      // TODO: Transforms needed?
-//  mx.transform(MD_MAX72XX::TRC);
-//  mx.transform(MD_MAX72XX::TRC);
+  mx.transform(MD_MAX72XX::TRC);
   mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
 }
 
