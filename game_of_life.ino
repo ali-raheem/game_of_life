@@ -9,6 +9,41 @@
 #define MAX_DEVICES  16
 MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
+uint32_t frame[32] = {
+        0x3FFFFFFC,
+        0x40000002,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0xFFFFFFFF,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x80000001,
+        0x40000002,
+        0x3FFFFFFC
+};
+
 #define USE_STALE_LIMIT
 #define USE_GENERATION_LIMIT
 //#define USE_SERIAL
@@ -66,6 +101,8 @@ void clearState() {
 
 void initialize() {
   clearState();
+  render((uint8_t *)frame);
+  delay(10000);
   //showTime();
   generation = 0;
   
@@ -124,24 +161,23 @@ void randomize() {
     state[i] = random();
 }
 
-void sendBlock(uint8_t r, uint8_t c) {
+void sendBlock(uint8_t *data, uint8_t r, uint8_t c) {
   uint8_t block[8];
-  uint8_t *stateBlocksStart = (uint8_t *) state;
-  stateBlocksStart += c + COLS * r;
+  uint8_t *blocksStart = data  + 4 * r + c;
   uint8_t i;
   for (i = 0; i < 8; i++)
-      block[i] = stateBlocksStart[i * 4];
+      block[i] = blocksStart[4 * i];
       // TODO learn how setBuffer works.
-  mx.setBuffer(c*8 + r*4*8, 8, block);
+  mx.setBuffer(8 * (r * 4 + c + 1), 8, block);
 }
 
-void render(){
+void render(uint8_t *data){
   uint8_t i, j;
-  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
+ // mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
   mx.clear();
   for(i = 0; i < ROWS/8; i++)
     for(j = 0; j < COLS/8; j++)
-      sendBlock(i, j);
+      sendBlock(data, i, j);
       // TODO: Transforms needed?
 //  mx.transform(MD_MAX72XX::TRC);
 //  mx.transform(MD_MAX72XX::TRC);
@@ -186,6 +222,9 @@ uint16_t updateBoard() {
 }
 
 void setup() {
+  mx.begin();
+  mx.clear();
+  mx.control(MD_MAX72XX::INTENSITY, 7);
  #ifdef USE_SERIAL
   Serial.begin(115200);
   Serial.println("Game of Life for Arduino");
@@ -194,9 +233,9 @@ void setup() {
   uint16_t columnCount = mx.getColumnCount();
   Serial.print(columnCount, DEC);
  #endif
-  mx.begin();
-  mx.control(MD_MAX72XX::INTENSITY, 0);
-  mx.clear();
+  //mx.begin();
+ // mx.control(MD_MAX72XX::INTENSITY, 0);
+  //mx.clear();
   int seed = analogRead(0) ^ analogRead(1);
   randomSeed(seed);
   initialize();
