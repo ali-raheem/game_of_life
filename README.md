@@ -2,16 +2,21 @@
 
 A simple Arduino sketch for Conway's Game of Life.
 
-The goal was to be somewhat light on memory - each cell state is held by a single bit.
+The goal was to be somewhat light on memory using a bitfield.
 
-Serial branch Uses 1 frame buffer + 3 Line buffers (this can be cut down to 2 if a close topology is needed) and the algorithim could do with some optimizing.
+Serial branch Uses 1 frame buffer + 3 Line buffers (this can be cut down to 2 if a close topology is needed).
 
 Master is intended to work with 4 FC16 MAX72XX boards.
+
+![Output to an LED matrix](LED-32x32.jpg)
+
 
 ## Settings
 
 Code is hopefully self explanatory but:
 
+
+0. If it's not hooked up to a 32x32 LED matrix of the MAX72* type enable `USE_SERIAL` to get the output over the serial port.
 1. First decide on a topology and set `get_state` to point to either `get_state_wrapped` or `get_state_closed` (or define your own).
 2. Decide on initial conditions in `setup` randomize, a glider... both?
 3. You can change string printed for living or dead cells with `LIVE` and `DEAD`.
