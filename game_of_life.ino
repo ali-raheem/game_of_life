@@ -3,17 +3,10 @@
 
 #include <avr/wdt.h>
 
-#include <MD_MAX72xx.h>
-#define CLK_PIN   13  // or SCK
-#define DATA_PIN  11  // or MOSI
-#define CS_PIN    10  // or SS
-#define HARDWARE_TYPE MD_MAX72XX::FC16_HW
-#define MAX_DEVICES  16
-MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
-
 #define USE_STALE_LIMIT
 #define USE_GENERATION_LIMIT
 //#define USE_SERIAL
+#define USE_LED
 
 #ifdef USE_GENERATION_LIMIT
 const uint16_t GENERATION_LIMIT = 2000;
@@ -38,6 +31,16 @@ const uint32_t SHOW_TIME_DELAY = 5000;
 const uint8_t LED_BRIGHTNESS = 0; // 0-7
 uint16_t generation;
 uint8_t activeLineBuffer;
+
+#ifdef USE_LED
+#include <MD_MAX72xx.h>
+#define CLK_PIN   13  // or SCK
+#define DATA_PIN  11  // or MOSI
+#define CS_PIN    10  // or SS
+#define HARDWARE_TYPE MD_MAX72XX::FC16_HW
+#define MAX_DEVICES  16
+MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
+#endif
 
 //uint32_t frame[32] = {
 //        0x3FFFFFFC,
@@ -144,15 +147,6 @@ uint8_t activeLineBuffer;
 //        0x00000000
 //};
 
-void printText(const uint8_t r, const char data[6]) {
-  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
-  mx.setChar(5+r*32, data[4]);
-  mx.setChar(12+r*32, data[3]);
-  mx.setChar(15+r*32, data[2]);
-  mx.setChar(21+r*32, data[1]);
-  mx.setChar(29+r*32, data[0]);
-  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
-}
 void showTime() {
   char count[6];
   static uint8_t mins = 30;
@@ -163,14 +157,24 @@ void showTime() {
       hours = 0;
   }
   snprintf(count, 6, "%02d:%02d", hours, mins);
+#ifdef USE_LED
   printText(1, count);
+#endif
+#ifdef USE_SERIAL
+  Serial.println(count);
+#endif
 }
 void showDate() {
   char count[6];
   static uint8_t day = 06;
   static uint8_t month = 02;
   snprintf(count, 6, "%02d.%02d", day, month);
-  printText(2, count);
+#ifdef USE_LED
+  printText(1, count);
+#endif
+#ifdef USE_SERIAL
+  Serial.println(count);
+#endif
 }
 
 void clearState() {
@@ -248,6 +252,16 @@ void randomize() {
     state[i] = random();
 }
 
+#ifdef USE_LED
+void printText(const uint8_t r, const char data[6]) {
+  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
+  mx.setChar(5+r*32, data[4]);
+  mx.setChar(12+r*32, data[3]);
+  mx.setChar(15+r*32, data[2]);
+  mx.setChar(21+r*32, data[1]);
+  mx.setChar(29+r*32, data[0]);
+  mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
+}
 void sendBlock(uint8_t *data, uint8_t r, uint8_t c) {
   uint8_t block[8];
   uint8_t *blocksStart = data  + (COLS * r) + c;
@@ -267,6 +281,7 @@ void render(uint8_t *data){
   mx.transform(MD_MAX72XX::TRC);
   mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
 }
+#endif
 
 uint16_t updateBoard() {
   uint16_t i, j, population = 0;
@@ -304,16 +319,16 @@ uint16_t updateBoard() {
 }
 
 void setup() {
+#ifdef USE_LED
   mx.begin();
   mx.clear();
   mx.control(MD_MAX72XX::INTENSITY, LED_BRIGHTNESS);
+#endif
 #ifdef USE_SERIAL
   Serial.begin(115200);
   Serial.println("Game of Life for Arduino");
   Serial.println("Copyright 2022 Ali Raheem <github@shoryuken.me>");
   Serial.println("https://github.com/ali-raheem/game_of_life");
-  uint16_t columnCount = mx.getColumnCount();
-  Serial.print(columnCount, DEC);
 #endif
   int seed = analogRead(0) ^ analogRead(1);
   randomSeed(seed);
@@ -329,7 +344,9 @@ void loop() {
 #ifdef USE_SERIAL
   updateTime = millis() - updateTime;
 #endif
+#ifdef USE_LED
   render((uint8_t *) state);
+#endif
 #ifdef USE_SERIAL
   Serial.print("Generation:\t");
   Serial.print(generation, DEC);
