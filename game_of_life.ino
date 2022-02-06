@@ -179,8 +179,17 @@ void clearState() {
     state[i] = 0;
 }
 
+int freeRAM () 
+{
+  extern int __heap_start, *__brkval; 
+  int v; 
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
+}
+
 void initialize() {
   wdt_disable();
+  Serial.print("Stack size: ");  Serial.println(RAMEND - SP);
+  Serial.print("Stack size: ");  Serial.println(freeRAM());
   clearState();
 //  render((uint8_t *) frame);
 //  showTime();
@@ -307,6 +316,7 @@ void setup() {
   mx.begin();
   mx.clear();
   mx.control(MD_MAX72XX::INTENSITY, LED_BRIGHTNESS);
+  Serial.begin(115200);
 #ifdef USE_SERIAL
   Serial.begin(115200);
   Serial.println("Game of Life for Arduino");
@@ -342,11 +352,11 @@ void loop() {
   Serial.println("ms.");
 #endif
   if (population < 3) {
-    initialize();
+    reset();
   } else {
 #ifdef USE_STALE_LIMIT
   if (++staleCount > STALE_LIMIT) {
-    initialize();
+    reset();
   } else {
     if (previousPopulation != population) {
       staleCount = 0;
@@ -355,7 +365,7 @@ void loop() {
 #endif
 #ifdef USE_GENERATION_LIMIT
   if (generation > GENERATION_LIMIT) {
-    initialize();
+    reset();
   } else {
 #endif
     generation++;
@@ -367,4 +377,8 @@ void loop() {
     }
 #endif
   }
+}
+
+void reset() {
+  asm volatile (" jmp 0");
 }
