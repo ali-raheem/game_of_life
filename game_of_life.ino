@@ -4,10 +4,10 @@
 
 #include "conway.h"
 
-#define USE_STALE_LIMIT
-#define USE_GENERATION_LIMIT
+//#define USE_STALE_LIMIT
+//#define USE_GENERATION_LIMIT
 //#define USE_SERIAL
-#define USE_LED
+//#define USE_LED
 
 #ifdef USE_GENERATION_LIMIT
 const uint16_t GENERATION_LIMIT = 2000;
@@ -292,7 +292,7 @@ void loop() {
   delay(FRAME_TIME);
   if (gol.population < 3) {
     reset();
-  } else {
+  }
 #ifdef USE_STALE_LIMIT
   if (gol.staleness > STALE_LIMIT) {
     reset();
@@ -301,13 +301,7 @@ void loop() {
 #ifdef USE_GENERATION_LIMIT
   if (gol.generation > GENERATION_LIMIT) {
     reset();
-  } else {
-#endif
-#ifdef USE_GENERATION_LIMIT
-      }
-#endif
-#ifdef USE_STALE_LIMIT
-    }
+  }
 #endif
  }
 

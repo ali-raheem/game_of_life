@@ -31,17 +31,14 @@ Code is hopefully self explanatory but:
 
 ## Performance
 
-The Serial output is slow even at 115200 baud making it take about 261ms to update and output a frame.
-
-LED output is very fast <50ms per update allowing.
+Running an 328p at (a claimed) 16Mhz a 32x32 board updates in under 50ms. Serial output is of course slow.
 
 ## Memory usage (serial and LED output disabled)
 
 ```
-Sketch uses 2000 bytes (6%) of program storage space. Maximum is 30720 bytes.
-Global variables use 159 bytes (7%) of dynamic memory, leaving 1889 bytes for local variables. Maximum is 2048 bytes.
+Sketch uses 2542 bytes (8%) of program storage space. Maximum is 30720 bytes.
+Global variables use 169 bytes (8%) of dynamic memory, leaving 1879 bytes for local variables. Maximum is 2048 bytes.
 ```
-
 
 ## Screenshots
 ![Screenshot of the sketch running with serial output](screenshot.png).
