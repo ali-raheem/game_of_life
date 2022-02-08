@@ -4,9 +4,9 @@
 
 #include "conway.h"
 
-//#define USE_STALE_LIMIT
-//#define USE_GENERATION_LIMIT
-//#define USE_SERIAL
+#define USE_STALE_LIMIT
+#define USE_GENERATION_LIMIT
+#define USE_SERIAL
 //#define USE_LED
 
 #ifdef USE_GENERATION_LIMIT
@@ -201,7 +201,7 @@ void initialize() {
 //  state[5] = 0x20;
 //  state[6] = 0x10;
 //  state[7] = 0x70;
-  wdt_enable(WDTO_1S);
+  wdt_enable(WDTO_2S);
 }
 
 #ifdef USE_LED
@@ -236,9 +236,17 @@ void render(uint8_t *data){
 #endif
 
 void randomize() {
-   uint8_t i;
-   for(i = 0; i < ROWS; i++)
-    gol.state[i] = random();
+   uint8_t i, j;
+   row r;
+   for(i = 0; i < ROWS; i++) {
+    r = random();
+    for(j = 0; j < sizeof(row)/sizeof(long); j++) {
+      r <<= 8*sizeof(long);
+      r |= (row) random();
+    }
+    gol.state[i] = r;
+    r = 0;
+   }
 }
 
 void setup() {
@@ -256,19 +264,13 @@ void setup() {
   int seed = analogRead(0) ^ analogRead(1);
   randomSeed(seed);
   initialize();
+#ifdef USE_SERIAL
+  printSerial(0);
+#endif
 }
 
-void loop() {
-  wdt_reset();
-#ifdef USE_SERIAL
-  uint32_t updateTime = millis();
-#endif
-  gol.next();
-#ifdef USE_SERIAL
-  updateTime = millis() - updateTime;
-#endif
+void printSerial(uint32_t updateTime) {
   uint8_t i, j;
-#ifdef USE_SERIAL
   for(i = 0; i < ROWS; i++) {
     for(j = 0; j < COLS; j++) {
       bool s = (gol.*(gol.getCellState))(i, j);
@@ -285,6 +287,17 @@ void loop() {
   Serial.print("\t Took:\t");
   Serial.print(updateTime, DEC);
   Serial.println("ms.");
+}
+
+void loop() {
+  wdt_reset();
+#ifdef USE_SERIAL
+  uint32_t updateTime = millis();
+#endif
+  gol.next();
+#ifdef USE_SERIAL
+  updateTime = millis() - updateTime;
+  printSerial(updateTime);
 #endif
 #ifdef USE_LED
   render((uint8_t *) gol.state);
