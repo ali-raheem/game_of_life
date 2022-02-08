@@ -1,7 +1,8 @@
 // Copyright 2022 Ali Raheem <github@shoryuken.me>
 // https://github.com/ali-raheem/game_of_life
+// https://github.com/ali-raheem/conway
 
-#include <avr/wdt.h>
+#include "conway.h"
 
 #define USE_STALE_LIMIT
 #define USE_GENERATION_LIMIT
@@ -18,19 +19,15 @@ uint16_t previousPopulation;
 uint8_t staleCount;
 #endif
 
-bool isAlive_wrapped(int, int);
-bool isAlive_closed(int, int);
-bool (*isAlive)(int, int) = isAlive_wrapped;
-
 const uint8_t ROWS = 32;
-uint32_t state[ROWS + 3];
-const uint8_t firstRowBuffer = ROWS + 2;
-const uint8_t COLS = 8 * sizeof(state[0]);
-const uint32_t FRAME_TIME = 100;
+typedef uint32_t row; // uint32_t = 32 columns, uint64_t = 64 columns etc...
+const uint8_t BUFFER_LENGTH = ROWS + 3;
+row state[ROWS + 3];
+const uint8_t COLS = 8 * sizeof(row);
+const uint32_t FRAME_TIME = 0;
 const uint32_t SHOW_TIME_DELAY = 5000;
 const uint8_t LED_BRIGHTNESS = 0; // 0-7
-uint16_t generation;
-uint8_t activeLineBuffer;
+Conway<row> gol(state, BUFFER_LENGTH);
 
 #ifdef USE_LED
 #include <MD_MAX72xx.h>
@@ -42,7 +39,14 @@ uint8_t activeLineBuffer;
 MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 #endif
 
-//uint32_t frame[32] = {
+#ifdef USE_SERIAL
+const char LIVE[] = " # ";
+const char DEAD[] = " - ";
+#endif
+
+#include <avr/wdt.h>
+
+//row frame[32] = {
 //        0x3FFFFFFC,
 //        0x40000002,
 //        0x80000001,
@@ -77,7 +81,7 @@ MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 //        0x3FFFFFFC
 //};
 //
-//uint32_t heart[32] = {
+//row heart[32] = {
 //        0x00000000,
 //        0x00000000,
 //        0x00000000,
@@ -177,15 +181,8 @@ void showDate() {
 #endif
 }
 
-void clearState() {
-  uint8_t i;
-  for(i = 0; i < ROWS + 3; i++)
-    state[i] = 0;
-}
-
 void initialize() {
   wdt_disable();
-  clearState();
 //  render((uint8_t *) frame);
 //  showTime();
 //  showDate();
@@ -194,11 +191,6 @@ void initialize() {
 //  delay(SHOW_TIME_DELAY);
 //    render((uint8_t *) knob);
 //  delay(SHOW_TIME_DELAY);
-  generation = 0;
-  
-#ifdef USE_STALE_LIMIT
-  previousPopulation = staleCount = 0;
-#endif
 
   //randomize will intialise them... randomly.
   randomize();
@@ -210,46 +202,6 @@ void initialize() {
 //  state[6] = 0x10;
 //  state[7] = 0x70;
   wdt_enable(WDTO_1S);
-}
-
-// Closed topology
-bool isAlive_closed (int i, int j) {
-  if (i < 0 || i > (ROWS-1) || j < 0 || j > (COLS-1))
-    return false;
-  return ((state[i]) >> j) & 1;
-}
-
-// Wrapped topology
-bool isAlive_wrapped (int i, int j) {
-  if (i < 0)
-    i = ROWS - 1;
-  if (i > (ROWS - 1))
-    i = 0;
-  if (j < 0)
-    j = COLS - 1;
-  if (j > (COLS - 1))
-    j = 0;
-  return (state[i] >> j) & 1;
-}
-
-void nextState (uint16_t i, uint16_t j, uint32_t s, uint8_t sum) {
-  const uint32_t one = 1;
-  switch (sum) {
-    case 3:
-      state[activeLineBuffer] |= (one << j);
-      break;
-    case 4:
-      state[activeLineBuffer] |= (s << j);
-      break;
-    default:
-      state[activeLineBuffer] &= ~(one << j);
-  }
-}
-
-void randomize() {
-   uint8_t i;
-   for(i = 0; i < ROWS; i++)
-    state[i] = random();
 }
 
 #ifdef USE_LED
@@ -283,39 +235,10 @@ void render(uint8_t *data){
 }
 #endif
 
-uint16_t updateBoard() {
-  uint16_t i, j, population = 0;
-  activeLineBuffer = firstRowBuffer;
-  for (i = 0; i < ROWS; i++) {
-    state[activeLineBuffer] = 0;
-    bool oldState = isAlive(i, 0);
-    uint8_t sum_l = isAlive(i - 1, -1) + isAlive(i, -1) + isAlive(i + 1, -1);
-    uint8_t sum_m = isAlive(i - 1, 0) + oldState + isAlive(i + 1, 0);
-    for (j = 0; j < COLS; j++) {
-      bool oldStateR = isAlive(i, j + 1);
-#ifdef USE_SERIAL
-      if (oldState)
-        Serial.print(" # ");
-      else
-        Serial.print(" - ");
-#endif
-      uint8_t sum_r = isAlive(i - 1, j + 1) + oldStateR + isAlive(i + 1, j + 1);
-      uint8_t liveCells = sum_l + sum_m + sum_r;
-      nextState(i, j, oldState, liveCells);
-      population += oldState;
-      oldState = oldStateR;
-      sum_l = sum_m;
-      sum_m = sum_r;
-    }
-    activeLineBuffer = ROWS + (i % 2);
-    if (i > 1)  state[i - 1] = state[activeLineBuffer];
-#ifdef USE_SERIAL
-      Serial.println();
-#endif 
-  }
-  state[0] = state[firstRowBuffer];
-  state[ROWS - 1] = state[ROWS + (i % 2)];
-  return population;
+void randomize() {
+   uint8_t i;
+   for(i = 0; i < ROWS; i++)
+    gol.state[i] = random();
 }
 
 void setup() {
@@ -340,51 +263,53 @@ void loop() {
 #ifdef USE_SERIAL
   uint32_t updateTime = millis();
 #endif
-  uint16_t population = updateBoard();
+  gol.next();
 #ifdef USE_SERIAL
   updateTime = millis() - updateTime;
 #endif
-#ifdef USE_LED
-  render((uint8_t *) state);
-#endif
+  uint8_t i, j;
 #ifdef USE_SERIAL
+  for(i = 0; i < ROWS; i++) {
+    for(j = 0; j < COLS; j++) {
+      bool s = (gol.*(gol.getCellState))(i, j);
+      Serial.print((s? LIVE : DEAD));
+    }
+    Serial.println();
+  }
   Serial.print("Generation:\t");
-  Serial.print(generation, DEC);
+  Serial.print(gol.generation, DEC);
   Serial.print("\t Population:\t");
-  Serial.print(population, DEC);
+  Serial.print(gol.population, DEC);
   Serial.print("\t Stale:\t");
-  Serial.print(staleCount, DEC);
+  Serial.print(gol.staleness, DEC);
   Serial.print("\t Took:\t");
   Serial.print(updateTime, DEC);
   Serial.println("ms.");
 #endif
-  if (population < 3) {
+#ifdef USE_LED
+  render((uint8_t *) gol.state);
+#endif
+  delay(FRAME_TIME);
+  if (gol.population < 3) {
     reset();
   } else {
 #ifdef USE_STALE_LIMIT
-  if (++staleCount > STALE_LIMIT) {
+  if (gol.staleness > STALE_LIMIT) {
     reset();
-  } else {
-    if (previousPopulation != population) {
-      staleCount = 0;
-      previousPopulation = population;
-    }
+  }
 #endif
 #ifdef USE_GENERATION_LIMIT
-  if (generation > GENERATION_LIMIT) {
+  if (gol.generation > GENERATION_LIMIT) {
     reset();
   } else {
 #endif
-    generation++;
-    delay(FRAME_TIME);
 #ifdef USE_GENERATION_LIMIT
       }
 #endif
 #ifdef USE_STALE_LIMIT
     }
 #endif
-  }
-}
+ }
 
 void reset() {
   asm volatile (" jmp 0");

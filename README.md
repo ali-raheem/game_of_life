@@ -1,6 +1,6 @@
 # Conway's Game of Life
 
-A simple Arduino sketch for Conway's Game of Life.
+A simple Arduino sketch for Conway's Game of Life. Uses my [Conway library](https://github.com/ali-raheem/conway).
 
 The goal was to be somewhat light on memory using a bitfield.
 
