@@ -6,8 +6,8 @@
 
 #define USE_STALE_LIMIT
 #define USE_GENERATION_LIMIT
-#define USE_SERIAL
-//#define USE_LED
+//#define USE_SERIAL
+#define USE_LED
 
 #ifdef USE_GENERATION_LIMIT
 const uint16_t GENERATION_LIMIT = 2000;
@@ -268,7 +268,7 @@ void setup() {
   printSerial(0);
 #endif
 }
-
+#ifdef USE_SERIAL
 void printSerial(uint32_t updateTime) {
   uint8_t i, j;
   for(i = 0; i < ROWS; i++) {
@@ -288,6 +288,7 @@ void printSerial(uint32_t updateTime) {
   Serial.print(updateTime, DEC);
   Serial.println("ms.");
 }
+#endif
 
 void loop() {
   wdt_reset();
