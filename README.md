@@ -31,7 +31,7 @@ Code is hopefully self explanatory but:
 
 ## Performance
 
-Running an 328p at (a claimed) 16Mhz a 32x32 board updates in under 50ms. Serial output is of course slow.
+Running an 328p at (a claimed) 16Mhz a 32x32 board updates in under 10ms (mean 7ms). Serial output is of course slow.
 
 ## Memory usage (serial and LED output disabled)
 
