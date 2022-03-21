@@ -2,6 +2,8 @@
 // https://github.com/ali-raheem/game_of_life
 // https://github.com/ali-raheem/conway
 
+#pragma GCC optimize ("O3")
+
 #include "conway.h"
 
 #define USE_STALE_LIMIT
@@ -14,7 +16,7 @@ const uint16_t GENERATION_LIMIT = 2000;
 #endif
 
 #ifdef USE_STALE_LIMIT
-const uint8_t STALE_LIMIT = 10;
+const uint8_t STALE_LIMIT = 50;
 uint16_t previousPopulation;
 uint8_t staleCount;
 #endif
@@ -44,164 +46,22 @@ const char LIVE[] = " # ";
 const char DEAD[] = " - ";
 #endif
 
+#ifdef __AVR
 #include <avr/wdt.h>
-
-//row frame[32] = {
-//        0x3FFFFFFC,
-//        0x40000002,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0xFFFFFFFF,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x40000002,
-//        0x3FFFFFFC
-//};
-//
-//row heart[32] = {
-//        0x00000000,
-//        0x00000000,
-//        0x00000000,
-//        0x07F83F80,
-//        0x1806C070,
-//        0x30010018,
-//        0x4002000C,
-//        0xC0060006,
-//        0x80040002,
-//        0x80000002,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0x80000001,
-//        0xC0000001,
-//        0x40000002,
-//        0x60000006,
-//        0x2000000C,
-//        0x10000018,
-//        0x18000030,
-//        0x0C000060,
-//        0x060000C0,
-//        0x03000180,
-//        0x01800300,
-//        0x00C00600,
-//        0x00600C00,
-//        0x00301800,
-//        0x00186000,
-//        0x000D8000,
-//        0x00020000
-//};
-//
-//uint32_t knob[32] = {
-//        0x00000000,
-//        0x00000000,
-//        0x00000000,
-//        0x00000000,
-//        0x00000000,
-//        0x3E000000,
-//        0x62000000,
-//        0x43E00000,
-//        0x623FE000,
-//        0x66003FC0,
-//        0x64000000,
-//        0x44000000,
-//        0x44000000,
-//        0x64000000,
-//        0x34000000,
-//        0x0F000000,
-//        0x01E00000,
-//        0x003C0000,
-//        0x0007F810,
-//        0x00001818,
-//        0x0000300C,
-//        0x00002004,
-//        0x00006006,
-//        0x00004002,
-//        0x00004002,
-//        0x00004102,
-//        0x00004182,
-//        0x00006086,
-//        0x000038CC,
-//        0x00000F78,
-//        0x00000000,
-//        0x00000000
-//};
-
-void showTime() {
-  char count[6];
-  static uint8_t mins = 30;
-  static uint8_t hours = 23;
-  if(++mins > 59) {
-    mins = 0;
-    if(++hours > 23)
-      hours = 0;
-  }
-  snprintf(count, 6, "%02d:%02d", hours, mins);
-#ifdef USE_LED
-  printText(1, count);
 #endif
-#ifdef USE_SERIAL
-  Serial.println(count);
-#endif
-}
-void showDate() {
-  char count[6];
-  static uint8_t day = 06;
-  static uint8_t month = 02;
-  snprintf(count, 6, "%02d.%02d", day, month);
-#ifdef USE_LED
-  printText(1, count);
-#endif
-#ifdef USE_SERIAL
-  Serial.println(count);
-#endif
-}
 
 void initialize() {
-  wdt_disable();
-//  render((uint8_t *) frame);
-//  showTime();
-//  showDate();
-//  delay(SHOW_TIME_DELAY);
-//  render((uint8_t *) heart);
-//  delay(SHOW_TIME_DELAY);
-//    render((uint8_t *) knob);
-//  delay(SHOW_TIME_DELAY);
-
-  //randomize will intialise them... randomly.
-  randomize();
+ randomize();
   // Gliders
-//  state[0] = 0x2;
-//  state[1] = 0x1;
-//  state[2] = 0x7;
+  state[0] = 0x00200;
+  state[1] = 0x00100;
+  state[2] = 0x00700;
 //  state[5] = 0x20;
 //  state[6] = 0x10;
 //  state[7] = 0x70;
+#ifdef __AVR
   wdt_enable(WDTO_2S);
+#endif
 }
 
 #ifdef USE_LED
@@ -250,18 +110,25 @@ void randomize() {
 }
 
 void setup() {
+#ifdef __AVR
+  wdt_disable();
+#endif
 #ifdef USE_LED
   mx.begin();
   mx.clear();
-  mx.control(MD_MAX72XX::INTENSITY, LED_BRIGHTNESS);
 #endif
 #ifdef USE_SERIAL
+  while (!Serial);
   Serial.begin(115200);
   Serial.println("Game of Life for Arduino");
   Serial.println("Copyright 2022 Ali Raheem <github@shoryuken.me>");
   Serial.println("https://github.com/ali-raheem/game_of_life");
 #endif
-  int seed = analogRead(0) ^ analogRead(1);
+  pinMode(A1, INPUT);
+  digitalWrite(A1, LOW); // fake ground FIXME
+  int lightLevel = analogRead(0);
+  int seed = lightLevel ^ analogRead(1) ^ analogRead(2);
+    mx.control(MD_MAX72XX::INTENSITY, LED_BRIGHTNESS);
   randomSeed(seed);
   initialize();
 #ifdef USE_SERIAL
@@ -291,7 +158,9 @@ void printSerial(uint32_t updateTime) {
 #endif
 
 void loop() {
+#ifdef __AVR
   wdt_reset();
+#endif
 #ifdef USE_SERIAL
   uint32_t updateTime = millis();
 #endif
@@ -320,5 +189,7 @@ void loop() {
  }
 
 void reset() {
+ #ifdef __AVR
   asm volatile (" jmp 0");
+#endif
 }
