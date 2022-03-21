@@ -2,6 +2,7 @@
 Conway is a library for running John Conway's Game of Life
 Copyright Ali Raheem 2022 - https://github.com/ali-raheem/conway
 MIT Licensed
+File version: 2022-03-21 22:20 GMT
 */
 
 #ifndef CONWAY_H
@@ -28,11 +29,9 @@ class Conway {
     uint16_t staleness;
     uint16_t next();
     void clear();
-    bool getCellStateClosed (int i, int j);
-    bool getCellStateWrapped (int i, int j);
     bool getNextCellState (bool s, uint8_t sum);
     void updateCellState (uint16_t i, uint16_t j, uint32_t s, uint8_t sum);
-    bool (Conway::*getCellState)(int, int);
+    bool getCellState (int8_t i, int8_t j);
   private:
     uint8_t activeLineBuffer;
     uint8_t lastPopulation;
@@ -45,20 +44,10 @@ Conway<T>::Conway(T* buffer, uint8_t length) {
   state = buffer;
   cols = 8 * sizeof(T);
   generation = population = staleness = 0;
-  getCellState = &Conway::getCellStateWrapped;
 };
 
-// Closed topology
 template <class T>
-bool Conway<T>::getCellStateClosed (int i, int j) {
-  if (i < 0 || i > (rows - 1) || j < 0 || j > (cols - 1))
-    return false;
-  return ((state[i]) >> j) & 1;
-}
-
-// Wrapped topology
-template <class T>
-bool Conway<T>::getCellStateWrapped (int i, int j) {
+bool Conway<T>::getCellState (int8_t i, int8_t j) {
   if (i < 0)
     i = rows - 1;
   if (i > (rows - 1))
@@ -112,15 +101,15 @@ uint16_t Conway<T>::next() {
   activeLineBuffer = rows + 2;
   for (i = 0; i < rows; i++) {
     state[activeLineBuffer] = 0;
-    bool oldState = (*this.*getCellState)(i, 0);
-    uint8_t sum_l = (*this.*getCellState)(i - 1, -1) + (*this.*getCellState)(i, -1) + (*this.*getCellState)(i + 1, -1);
-    uint8_t sum_m = (*this.*getCellState)(i - 1, 0) + oldState + (*this.*getCellState)(i + 1, 0);
+    bool oldState = getCellState(i, 0);
+    uint8_t sum_l = getCellState(i - 1, -1) + getCellState(i, -1) + getCellState(i + 1, -1);
+    uint8_t sum_m = getCellState(i - 1, 0) + oldState + getCellState(i + 1, 0);
     uint8_t sum_r;
     bool oldStateR;
     uint8_t liveCells;
     j = 0;
-    oldStateR = (*this.*getCellState)(i, j + 1);
-    sum_r = (*this.*getCellState)(i - 1, j + 1) + oldStateR + (*this.*getCellState)(i + 1, j + 1);
+    oldStateR = getCellState(i, j + 1);
+    sum_r = getCellState(i - 1, j + 1) + oldStateR + getCellState(i + 1, j + 1);
     liveCells = sum_l + sum_m + sum_r;
     state[activeLineBuffer] |= ((T) getNextCellState(oldState, liveCells)) << (sizeof(T)*8 - 1);
     population += oldState;
@@ -130,10 +119,10 @@ uint16_t Conway<T>::next() {
     T prevRow = state[(i == 0)? rows - 1 : i - 1];
     T currRow = state[i];
     T nextRow = state[(i + 1) % rows];
-       prevRow >>= 1;
+    for (j = 1; j < cols - 1; j++) {
+      prevRow >>= 1;
       currRow >>= 1;
       nextRow >>= 1;
-    for (j = 1; j < cols - 1; j++) {
       oldStateR = !!(currRow & 0b10);
       sum_r = !!(prevRow & 0b10) + oldStateR + !!(nextRow & 0b10);
       liveCells = sum_l + sum_m + sum_r;
@@ -143,12 +132,9 @@ uint16_t Conway<T>::next() {
       oldState = oldStateR;
       sum_l = sum_m;
       sum_m = sum_r;
-      prevRow >>= 1;
-      currRow >>= 1;
-      nextRow >>= 1;
     }
-    oldStateR = (*this.*getCellState)(i, j + 1);
-    sum_r = (*this.*getCellState)(i - 1, j + 1) + oldStateR + (*this.*getCellState)(i + 1, j + 1);
+    oldStateR = getCellState(i, j + 1);
+    sum_r = getCellState(i - 1, j + 1) + oldStateR + getCellState(i + 1, j + 1);
     liveCells = sum_l + sum_m + sum_r;
     state[activeLineBuffer] >>= 1;
     state[activeLineBuffer] |= ((T) getNextCellState(oldState, liveCells)) << (sizeof(T)*8 - 1);
