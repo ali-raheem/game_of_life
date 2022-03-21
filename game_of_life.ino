@@ -8,7 +8,7 @@
 
 #define USE_STALE_LIMIT
 #define USE_GENERATION_LIMIT
-//#define USE_SERIAL
+#define USE_SERIAL
 #define USE_LED
 
 #ifdef USE_GENERATION_LIMIT
@@ -140,7 +140,7 @@ void printSerial(uint32_t updateTime) {
   uint8_t i, j;
   for(i = 0; i < ROWS; i++) {
     for(j = 0; j < COLS; j++) {
-      bool s = (gol.*(gol.getCellState))(i, j);
+      bool s = gol.getCellState(i, j);
       Serial.print((s? LIVE : DEAD));
     }
     Serial.println();
