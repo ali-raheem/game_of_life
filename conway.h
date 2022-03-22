@@ -2,7 +2,7 @@
 Conway is a library for running John Conway's Game of Life
 Copyright Ali Raheem 2022 - https://github.com/ali-raheem/conway
 MIT Licensed
-File version: 2022-03-21 22:20 GMT
+File version: 22/03/2022 17:39 GMT
 */
 
 #ifndef CONWAY_H
@@ -101,15 +101,15 @@ uint16_t Conway<T>::next() {
   activeLineBuffer = rows + 2;
   for (i = 0; i < rows; i++) {
     state[activeLineBuffer] = 0;
-    bool oldState = getCellState(i, 0);
     uint8_t sum_l = getCellState(i - 1, -1) + getCellState(i, -1) + getCellState(i + 1, -1);
+    bool oldState = getCellState(i, 0);
     uint8_t sum_m = getCellState(i - 1, 0) + oldState + getCellState(i + 1, 0);
+    uint8_t sum_0 = sum_m;
     uint8_t sum_r;
     bool oldStateR;
     uint8_t liveCells;
-    j = 0;
-    oldStateR = getCellState(i, j + 1);
-    sum_r = getCellState(i - 1, j + 1) + oldStateR + getCellState(i + 1, j + 1);
+    oldStateR = getCellState(i, 1);
+    sum_r = getCellState(i - 1, 1) + oldStateR + getCellState(i + 1, 1);
     liveCells = sum_l + sum_m + sum_r;
     state[activeLineBuffer] |= ((T) getNextCellState(oldState, liveCells)) << (sizeof(T)*8 - 1);
     population += oldState;
@@ -119,7 +119,7 @@ uint16_t Conway<T>::next() {
     T prevRow = state[(i == 0)? rows - 1 : i - 1];
     T currRow = state[i];
     T nextRow = state[(i + 1) % rows];
-    for (j = 1; j < cols - 1; j++) {
+    for (uint8_t j = 1; j < cols - 1; j++) {
       prevRow >>= 1;
       currRow >>= 1;
       nextRow >>= 1;
@@ -133,9 +133,7 @@ uint16_t Conway<T>::next() {
       sum_l = sum_m;
       sum_m = sum_r;
     }
-    oldStateR = getCellState(i, j + 1);
-    sum_r = getCellState(i - 1, j + 1) + oldStateR + getCellState(i + 1, j + 1);
-    liveCells = sum_l + sum_m + sum_r;
+    liveCells = sum_l + sum_m + sum_0;
     state[activeLineBuffer] >>= 1;
     state[activeLineBuffer] |= ((T) getNextCellState(oldState, liveCells)) << (sizeof(T)*8 - 1);
     population += oldState;
