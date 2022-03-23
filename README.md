@@ -2,12 +2,6 @@
 
 A simple Arduino sketch for Conway's Game of Life. Uses my [Conway library](https://github.com/ali-raheem/conway).
 
-The goal was to be somewhat light on memory using a bitfield.
-
-Serial branch Uses 1 frame buffer + 3 Line buffers (this can be cut down to 2 if a close topology is needed).
-
-Master is intended to work with 4 FC16 MAX72XX boards.
-
 ![Output to an LED matrix](LED-32x32.gif)
 
 ![Output to an LED matrix](LED-32x32.jpg)
@@ -31,13 +25,13 @@ Code is hopefully self explanatory but:
 
 ## Performance
 
-Running an 328p at (a claimed) 16Mhz a 32x32 board updates in <8ms (mean 5.5ms). Serial output is of course slow.
+Running an 328p at 16Mhz a 32x32 board updates in <7ms (mean 4ms) without LED output, on a 64x64 board it runs in <75ms (enable the `__CONWAY_OPTIMIZE_LARGE` flag).
 
-## Memory usage (serial and LED output disabled)
+## Memory usage 32x32 (serial and LED output disabled)
 
 ```
-Sketch uses 2542 bytes (8%) of program storage space. Maximum is 30720 bytes.
-Global variables use 169 bytes (8%) of dynamic memory, leaving 1879 bytes for local variables. Maximum is 2048 bytes.
+Sketch uses 4126 bytes (13%) of program storage space. Maximum is 30720 bytes.
+Global variables use 165 bytes (8%) of dynamic memory, leaving 1883 bytes for local variables. Maximum is 2048 bytes.
 ```
 
 ## Screenshots
