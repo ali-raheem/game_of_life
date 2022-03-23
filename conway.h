@@ -2,7 +2,7 @@
 Conway is a library for running John Conway's Game of Life
 Copyright Ali Raheem 2022 - https://github.com/ali-raheem/conway
 MIT Licensed
-File version: 2022-03-23 21:41 GMT
+File version: 2022-03-23 22:00 GMT
 */
 
 #ifndef CONWAY_H
@@ -87,10 +87,18 @@ uint16_t Conway<T>::next() {
     T prevRow = state[(i == 0)? rows - 1 : i - 1];
     T currRow = state[i];
     T nextRow = state[(i + 1) % rows];
-    uint8_t sum_l = !!(prevRow & (1 << MSB)) + !!(currRow & (1 << MSB)) + !!(nextRow & (1 << MSB));
+    uint8_t sum_l = !!((prevRow >> MSB) & 1) + !!((currRow >> MSB) & 1) + !!((nextRow >> MSB) & 1);
     bool oldState = !!(currRow & 1);
     uint8_t sum_m = !!(prevRow & 1) + oldState + !!(nextRow & 1);    
+//    uint8_t sum_l = getCellState(i - 1, -1) + getCellState(i, -1) + getCellState(i + 1, -1);
+//    bool oldState = getCellState(i, 0);
+//    uint8_t sum_m = getCellState(i - 1, 0) + oldState + getCellState(i + 1, 0);
     uint8_t sum_0 = sum_m;
+//    uint8_t sum_r;
+//    bool oldStateR;
+//    uint8_t liveCells;
+//    if(prevRow == 0 && currRow == 0 && nextRow == 0)
+//      continue;
 #ifdef __CONWAY_OPTIMIZE_LARGE
     prevRow >>= 1;
     currRow >>= 1;
