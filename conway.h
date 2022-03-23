@@ -33,6 +33,7 @@ class Conway {
     bool getCellState (int8_t i, int8_t j);
   private:
     uint8_t lastPopulation;
+    const uint8_t MSB = sizeof(T)*8 - 1;
 };
 
 
@@ -86,18 +87,10 @@ uint16_t Conway<T>::next() {
     T prevRow = state[(i == 0)? rows - 1 : i - 1];
     T currRow = state[i];
     T nextRow = state[(i + 1) % rows];
-    uint8_t sum_l = !!(prevRow & (1 << (sizeof(T)*8 - 1))) + !!(currRow & (1 << (sizeof(T)*8 - 1))) + !!(nextRow & (1 << (sizeof(T)*8 - 1)));
+    uint8_t sum_l = !!(prevRow & (1 << MSB)) + !!(currRow & (1 << MSB)) + !!(nextRow & (1 << MSB));
     bool oldState = !!(currRow & 1);
     uint8_t sum_m = !!(prevRow & 1) + oldState + !!(nextRow & 1);    
-//    uint8_t sum_l = getCellState(i - 1, -1) + getCellState(i, -1) + getCellState(i + 1, -1);
-//    bool oldState = getCellState(i, 0);
-//    uint8_t sum_m = getCellState(i - 1, 0) + oldState + getCellState(i + 1, 0);
     uint8_t sum_0 = sum_m;
-//    uint8_t sum_r;
-//    bool oldStateR;
-//    uint8_t liveCells;
-//    if(prevRow == 0 && currRow == 0 && nextRow == 0)
-//      continue;
 #ifdef __CONWAY_OPTIMIZE_LARGE
     prevRow >>= 1;
     currRow >>= 1;
@@ -111,7 +104,7 @@ uint16_t Conway<T>::next() {
     uint8_t liveCells = sum_l + sum_m + sum_r;
     if(getNextCellState(oldState, liveCells)) {
       T one = 1;
-      state[activeLineBuffer] |=  one << (sizeof(T)*8 - 1);
+      state[activeLineBuffer] |=  one << MSB;
     }
     population += oldState;
     oldState = oldStateR;
@@ -132,7 +125,7 @@ uint16_t Conway<T>::next() {
       state[activeLineBuffer] >>= 1;
       if(getNextCellState(oldState, liveCells)) {
         T one = 1;
-        state[activeLineBuffer] |=  one << (sizeof(T)*8 - 1);
+        state[activeLineBuffer] |=  one << MSB;
       }
 
       population += oldState;
@@ -144,7 +137,7 @@ uint16_t Conway<T>::next() {
     state[activeLineBuffer] >>= 1;
     if(getNextCellState(oldState, liveCells)) {
       T one = 1;
-      state[activeLineBuffer] |=  one << (sizeof(T)*8 - 1);
+      state[activeLineBuffer] |=  one << MSB;
     }
     population += oldState;
     activeLineBuffer = rows + (i & 1);
