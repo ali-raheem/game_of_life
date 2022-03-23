@@ -4,11 +4,14 @@
 
 #pragma GCC optimize ("O3")
 
+// Switch on optimziation for uint64_t matricies
+//#define __CONWAY_OPTIMIZE_LARGE
+
 #include "conway.h"
 
 #define USE_STALE_LIMIT
 #define USE_GENERATION_LIMIT
-#define USE_SERIAL
+//#define USE_SERIAL
 #define USE_LED
 
 #ifdef USE_GENERATION_LIMIT
@@ -16,7 +19,7 @@ const uint16_t GENERATION_LIMIT = 2000;
 #endif
 
 #ifdef USE_STALE_LIMIT
-const uint8_t STALE_LIMIT = 50;
+const uint8_t STALE_LIMIT = 5;
 uint16_t previousPopulation;
 uint8_t staleCount;
 #endif
@@ -33,7 +36,7 @@ Conway<row> gol(state, BUFFER_LENGTH);
 
 #ifdef USE_LED
 #include <MD_MAX72xx.h>
-#define CLK_PIN   13  // or SCK
+#define CLK_PIN   13  // or SCK 
 #define DATA_PIN  11  // or MOSI
 #define CS_PIN    10  // or SS
 #define HARDWARE_TYPE MD_MAX72XX::FC16_HW
@@ -128,7 +131,9 @@ void setup() {
   digitalWrite(A1, LOW); // fake ground FIXME
   int lightLevel = analogRead(0);
   int seed = lightLevel ^ analogRead(1) ^ analogRead(2);
-    mx.control(MD_MAX72XX::INTENSITY, LED_BRIGHTNESS);
+#ifdef USE_LED
+  mx.control(MD_MAX72XX::INTENSITY, LED_BRIGHTNESS);
+#endif
   randomSeed(seed);
   initialize();
 #ifdef USE_SERIAL
@@ -172,7 +177,8 @@ void loop() {
 #ifdef USE_LED
   render((uint8_t *) gol.state);
 #endif
-  delay(FRAME_TIME);
+  if(FRAME_TIME > 0)
+    delay(FRAME_TIME);
   if (gol.population < 3) {
     reset();
   }
