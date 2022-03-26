@@ -19,7 +19,7 @@ const uint16_t GENERATION_LIMIT = 2000;
 #endif
 
 #ifdef USE_STALE_LIMIT
-const uint8_t STALE_LIMIT = 5;
+const uint8_t STALE_LIMIT = 200;
 uint16_t previousPopulation;
 uint8_t staleCount;
 #endif
@@ -56,9 +56,9 @@ const char DEAD[] = " - ";
 void initialize() {
  randomize();
   // Gliders
-  state[0] = 0x00200;
-  state[1] = 0x00100;
-  state[2] = 0x00700;
+ // state[0] = 0x00200;
+  //state[1] = 0x00100;
+  //state[2] = 0x00700;
 //  state[5] = 0x20;
 //  state[6] = 0x10;
 //  state[7] = 0x70;
