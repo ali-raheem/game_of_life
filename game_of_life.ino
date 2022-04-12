@@ -194,7 +194,7 @@ void loop() {
 #endif
  }
 
-void reset() {
+[[noreturn]] void reset() {
  #ifdef __AVR
   asm volatile (" jmp 0");
 #endif
