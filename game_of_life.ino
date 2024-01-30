@@ -1,4 +1,4 @@
-// Copyright 2022 Ali Raheem <github@shoryuken.me>
+// Copyright 2022-2024 Ali Raheem <github@shoryuken.me>
 // https://github.com/ali-raheem/game_of_life
 // https://github.com/ali-raheem/conway
 
@@ -6,7 +6,7 @@
 
 // Switch on optimziation for uint64_t matricies
 //#define __CONWAY_OPTIMIZE_LARGE
-
+uint16_t memory __attribute__ ((section (".noinit")))  ;
 #include "conway.h"
 
 #define USE_STALE_LIMIT
@@ -112,7 +112,16 @@ void randomize() {
    }
 }
 
+void LFSR(uint16_t *m) {
+  // adapated from https://en.wikipedia.org/wiki/Linear-feedback_shift_register
+  uint8_t lsb = *m & 1u;
+  *m >>= 1;
+  if(lsb == 1)
+    *m ^= 0xB400u;
+}
 void setup() {
+  Serial.begin(115200);
+
 #ifdef __AVR
   wdt_disable();
 #endif
@@ -124,7 +133,7 @@ void setup() {
   while (!Serial);
   Serial.begin(115200);
   Serial.println("Game of Life for Arduino");
-  Serial.println("Copyright 2022 Ali Raheem <github@shoryuken.me>");
+  Serial.println("Copyright 2022-2024 Ali Raheem <github@shoryuken.me>");
   Serial.println("https://github.com/ali-raheem/game_of_life");
 #endif
   pinMode(A1, INPUT);
@@ -134,7 +143,9 @@ void setup() {
 #ifdef USE_LED
   mx.control(MD_MAX72XX::INTENSITY, LED_BRIGHTNESS);
 #endif
-  randomSeed(seed);
+  if (memory == 0) memory = seed;
+  LFSR(&memory);
+  randomSeed(seed^memory);
   initialize();
 #ifdef USE_SERIAL
   printSerial(0);
