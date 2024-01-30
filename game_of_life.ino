@@ -143,7 +143,7 @@ void setup() {
 #ifdef USE_LED
   mx.control(MD_MAX72XX::INTENSITY, LED_BRIGHTNESS);
 #endif
-  if (memory == 0) memory = seed;
+  if (memory == 0) memory = 0xDEAD;
   LFSR(&memory);
   randomSeed(seed^memory);
   initialize();
