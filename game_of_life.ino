@@ -2,11 +2,11 @@
 // https://github.com/ali-raheem/game_of_life
 // https://github.com/ali-raheem/conway
 
-#pragma GCC optimize ("O3")
+#pragma GCC optimize("O3")
 
 // Switch on optimziation for uint64_t matricies
 //#define __CONWAY_OPTIMIZE_LARGE
-uint16_t memory __attribute__ ((section (".noinit")))  ;
+uint16_t memory __attribute__((section(".noinit")));
 #include "conway.h"
 
 #define USE_STALE_LIMIT
@@ -24,23 +24,23 @@ uint16_t previousPopulation;
 uint8_t staleCount;
 #endif
 
-const uint8_t ROWS = 32;
-typedef uint32_t row; // uint32_t = 32 columns, uint64_t = 64 columns etc...
-const uint8_t BUFFER_LENGTH = ROWS + 3;
-row state[ROWS + 3];
-const uint8_t COLS = 8 * sizeof(row);
-const uint32_t FRAME_TIME = 0;
-const uint32_t SHOW_TIME_DELAY = 5000;
-const uint8_t LED_BRIGHTNESS = 0; // 0-7
+constexpr uint8_t ROWS = 32;
+using row = uint32_t;  // uint32_t = 32 columns, uint64_t = 64 columns etc...
+constexpr uint8_t BUFFER_LENGTH = ROWS + 3;
+row state[BUFFER_LENGTH];
+constexpr uint8_t COLS = 8 * sizeof(row);
+constexpr uint32_t FRAME_TIME = 0;
+constexpr uint32_t SHOW_TIME_DELAY = 5000;
+constexpr uint8_t LED_BRIGHTNESS = 0;  // 0-7
 Conway<row> gol(state, BUFFER_LENGTH);
 
 #ifdef USE_LED
 #include <MD_MAX72xx.h>
-#define CLK_PIN   13  // or SCK 
-#define DATA_PIN  11  // or MOSI
-#define CS_PIN    10  // or SS
+#define CLK_PIN 13   // or SCK
+#define DATA_PIN 11  // or MOSI
+#define CS_PIN 10    // or SS
 #define HARDWARE_TYPE MD_MAX72XX::FC16_HW
-#define MAX_DEVICES  16
+#define MAX_DEVICES 16
 MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 #endif
 
@@ -54,9 +54,9 @@ const char DEAD[] = " - ";
 #endif
 
 void initialize() {
- randomize();
+  randomize();
   // Gliders
- // state[0] = 0x00200;
+  // state[0] = 0x00200;
   //state[1] = 0x00100;
   //state[2] = 0x00700;
 //  state[5] = 0x20;
@@ -70,28 +70,28 @@ void initialize() {
 #ifdef USE_LED
 void printText(const uint8_t r, const char data[6]) {
   mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
-  mx.setChar(5+r*32, data[4]);
-  mx.setChar(12+r*32, data[3]);
-  mx.setChar(15+r*32, data[2]);
-  mx.setChar(21+r*32, data[1]);
-  mx.setChar(29+r*32, data[0]);
+  mx.setChar(5 + r * 32, data[4]);
+  mx.setChar(12 + r * 32, data[3]);
+  mx.setChar(15 + r * 32, data[2]);
+  mx.setChar(21 + r * 32, data[1]);
+  mx.setChar(29 + r * 32, data[0]);
   mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
 }
 void sendBlock(uint8_t *data, uint8_t r, uint8_t c) {
   uint8_t block[8];
-  uint8_t *blocksStart = data  + (COLS * r) + c;
+  uint8_t *blocksStart = data + (COLS * r) + c;
   uint8_t i;
   for (i = 0; i < 8; i++)
-      block[i] = blocksStart[(COLS/8) * i];
-  mx.setBuffer(8 * ((r * (COLS/8)) + c + 1) - 1, 8, block);
+    block[i] = blocksStart[(COLS / 8) * i];
+  mx.setBuffer(8 * ((r * (COLS / 8)) + c + 1) - 1, 8, block);
 }
 
-void render(uint8_t *data){
+void render(uint8_t *data) {
   uint8_t i, j;
   mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::OFF);
   mx.clear();
-  for(i = 0; i < ROWS/8; i++)
-    for(j = 0; j < COLS/8; j++)
+  for (i = 0; i < ROWS / 8; i++)
+    for (j = 0; j < COLS / 8; j++)
       sendBlock(data, i, j);
   mx.transform(MD_MAX72XX::TRC);
   mx.control(MD_MAX72XX::UPDATE, MD_MAX72XX::ON);
@@ -99,29 +99,27 @@ void render(uint8_t *data){
 #endif
 
 void randomize() {
-   uint8_t i, j;
-   row r;
-   for(i = 0; i < ROWS; i++) {
+  uint8_t i, j;
+  row r;
+  for (i = 0; i < ROWS; i++) {
     r = random();
-    for(j = 0; j < sizeof(row)/sizeof(long); j++) {
-      r <<= 8*sizeof(long);
-      r |= (row) random();
+    for (j = 0; j < sizeof(row) / sizeof(long); j++) {
+      r <<= 8 * sizeof(long);
+      r |= (row)random();
     }
     gol.state[i] = r;
     r = 0;
-   }
+  }
 }
 
 void LFSR(uint16_t *m) {
   // adapated from https://en.wikipedia.org/wiki/Linear-feedback_shift_register
   uint8_t lsb = *m & 1u;
   *m >>= 1;
-  if(lsb == 1)
+  if (lsb == 1)
     *m ^= 0xB400u;
 }
 void setup() {
-  Serial.begin(115200);
-
 #ifdef __AVR
   wdt_disable();
 #endif
@@ -137,7 +135,7 @@ void setup() {
   Serial.println("https://github.com/ali-raheem/game_of_life");
 #endif
   pinMode(A1, INPUT);
-  digitalWrite(A1, LOW); // fake ground FIXME
+  digitalWrite(A1, LOW);  // fake ground FIXME
   int lightLevel = analogRead(0);
   int seed = lightLevel ^ analogRead(1) ^ analogRead(2);
 #ifdef USE_LED
@@ -145,7 +143,7 @@ void setup() {
 #endif
   if (memory == 0) memory = 0xDEAD;
   LFSR(&memory);
-  randomSeed(seed^memory);
+  randomSeed(seed ^ memory);
   initialize();
 #ifdef USE_SERIAL
   printSerial(0);
@@ -154,10 +152,10 @@ void setup() {
 #ifdef USE_SERIAL
 void printSerial(uint32_t updateTime) {
   uint8_t i, j;
-  for(i = 0; i < ROWS; i++) {
-    for(j = 0; j < COLS; j++) {
+  for (i = 0; i < ROWS; i++) {
+    for (j = 0; j < COLS; j++) {
       bool s = gol.getCellState(i, j);
-      Serial.print((s? LIVE : DEAD));
+      Serial.print((s ? LIVE : DEAD));
     }
     Serial.println();
   }
@@ -186,9 +184,9 @@ void loop() {
   printSerial(updateTime);
 #endif
 #ifdef USE_LED
-  render((uint8_t *) gol.state);
+  render((uint8_t *)gol.state);
 #endif
-  if(FRAME_TIME > 0)
+  if (FRAME_TIME > 0)
     delay(FRAME_TIME);
   if (gol.population < 3) {
     reset();
@@ -203,10 +201,10 @@ void loop() {
     reset();
   }
 #endif
- }
+}
 
 [[noreturn]] void reset() {
- #ifdef __AVR
-  asm volatile (" jmp 0");
+#ifdef __AVR
+  asm volatile(" jmp 0");
 #endif
 }
