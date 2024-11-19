@@ -1,6 +1,10 @@
-// Copyright 2022-2024 Ali Raheem <github@shoryuken.me>
-// https://github.com/ali-raheem/game_of_life
-// https://github.com/ali-raheem/conway
+/*
+Copyright 2022-2024 Ali Raheem <github@shoryuken.me>
+https://github.com/ali-raheem/game_of_life
+https://github.com/ali-raheem/conway
+MIT Licensed
+File version: 2024-11-19 20:00 GMT
+*/
 
 #pragma GCC optimize("O3")
 
