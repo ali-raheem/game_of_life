@@ -33,7 +33,11 @@ Running an 328p at 16Mhz a 32x32 board updates in <7ms (mean 4ms) without LED ou
 Sketch uses 3516 bytes (11%) of program storage space. Maximum is 30720 bytes.
 Global variables use 165 bytes (8%) of dynamic memory, leaving 1883 bytes for local variables. Maximum is 2048 bytes.
 ```
-
+## Memory usage 32x32 (LED output with serial disabled)
+```
+Sketch uses 9024 bytes (29%) of program storage space. Maximum is 30720 bytes.
+Global variables use 214 bytes (10%) of dynamic memory, leaving 1834 bytes for local variables. Maximum is 2048 bytes.
+```
 ## Screenshots
 ![Screenshot of the sketch running with serial output](screenshot.png).
 
