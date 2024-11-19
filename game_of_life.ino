@@ -3,7 +3,7 @@ Copyright 2022-2024 Ali Raheem <github@shoryuken.me>
 https://github.com/ali-raheem/game_of_life
 https://github.com/ali-raheem/conway
 MIT Licensed
-File version: 2024-11-19 20:00 GMT
+File version: 2024-11-19 20:13 GMT
 */
 
 #pragma GCC optimize("O3")
@@ -19,13 +19,11 @@ uint16_t memory __attribute__((section(".noinit")));
 #define USE_LED
 
 #ifdef USE_GENERATION_LIMIT
-const uint16_t GENERATION_LIMIT = 2000;
+constexpr uint16_t GENERATION_LIMIT = 2000;
 #endif
 
 #ifdef USE_STALE_LIMIT
-const uint8_t STALE_LIMIT = 200;
-uint16_t previousPopulation;
-uint8_t staleCount;
+constexpr uint8_t STALE_LIMIT = 200;
 #endif
 
 constexpr uint8_t ROWS = 32;
@@ -40,11 +38,11 @@ Conway<row> gol(state, BUFFER_LENGTH);
 
 #ifdef USE_LED
 #include <MD_MAX72xx.h>
-#define CLK_PIN 13   // or SCK
-#define DATA_PIN 11  // or MOSI
-#define CS_PIN 10    // or SS
-#define HARDWARE_TYPE MD_MAX72XX::FC16_HW
-#define MAX_DEVICES 16
+constexpr uint8_t CLK_PIN  = 13;  // or SCK
+constexpr uint8_t DATA_PIN = 11;  // or MOSI
+constexpr uint8_t CS_PIN   = 10;  // or SS
+constexpr auto HARDWARE_TYPE = MD_MAX72XX::FC16_HW;
+constexpr uint8_t MAX_DEVICES = 16;
 MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 #endif
 
@@ -190,7 +188,7 @@ void loop() {
 #ifdef USE_LED
   render((uint8_t *)gol.state);
 #endif
-  if (FRAME_TIME > 0)
+  if (FRAME_TIME > 0)  // FIXME could sneak in some code in a non-blocking version.
     delay(FRAME_TIME);
   if (gol.population < 3) {
     reset();
